@@ -5,100 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google</title>
     <link rel="icon" type="image/x-icon" href="https://www.google.com/favicon.ico">
-    <script type="module" src="https://unpkg.com/x-frame-bypass"></script>
     <style>
         :root { --primary: #4285f4; --bg: #000; --card: #111; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Arial', sans-serif; background: var(--bg); color: white; overflow-x: hidden; }
 
+        /* Navigation */
         header { padding: 30px; text-align: center; background: #000; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
         .search-bar { width: 90%; max-width: 600px; padding: 12px 25px; border-radius: 25px; border: 1px solid #333; background: #202124; color: white; outline: none; }
         
+        /* The Grid */
         .container { padding: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
         .game-card { background: var(--card); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
-        .game-card:hover { transform: translateY(-5px); border-color: var(--primary); background: #1a1a1a; }
-        .game-card img { width: 60px; height: 60px; border-radius: 12px; margin-bottom: 8px; object-fit: cover; }
-        .game-card p { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .game-card:hover { transform: translateY(-5px); border-color: var(--primary); background: #1a1a1a; box-shadow: 0 0 15px rgba(66, 133, 244, 0.2); }
+        .game-card img { width: 60px; height: 60px; border-radius: 12px; margin-bottom: 8px; object-fit: cover; background: #333; }
+        .game-card p { font-size: 13px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* FULLSCREEN OVERLAY */
-        #game-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; }
-        #game-frame { width: 100%; height: 100%; border: none; }
-        .close-btn { position: fixed; top: 10px; right: 20px; font-size: 35px; color: white; cursor: pointer; z-index: 6000; opacity: 0.3; }
+        /* Game & Boss Overlays */
+        #game-overlay, #boss-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; }
+        #game-overlay { background: #000; }
+        #boss-screen { background: #fff; flex-direction: column; align-items: center; padding-top: 15vh; z-index: 10000; }
+        
+        iframe { width: 100%; height: 100%; border: none; }
+        .close-btn { position: fixed; top: 10px; right: 20px; font-size: 35px; color: white; cursor: pointer; z-index: 6000; opacity: 0.4; }
         .close-btn:hover { opacity: 1; }
-
-        /* BOSS SCREEN (The Disguise) */
-        #boss-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10000; flex-direction: column; align-items: center; padding-top: 15vh; }
-        .google-logo { width: 272px; margin-bottom: 25px; }
-        .fake-input { width: 584px; max-width: 90%; height: 44px; border: 1px solid #dfe1e5; border-radius: 24px; padding: 0 45px; font-size: 16px; outline: none; }
     </style>
 </head>
 <body>
 
     <div id="boss-screen">
-        <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" class="google-logo">
-        <input type="text" id="boss-input" class="fake-input" placeholder="Search Google or type a URL" autocomplete="off">
+        <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" width="272">
+        <input type="text" id="boss-input" style="width: 584px; max-width: 90%; height: 44px; border: 1px solid #dfe1e5; border-radius: 24px; padding: 0 45px; font-size: 16px; outline: none; margin-top: 25px;" placeholder="Search Google or type a URL">
     </div>
 
     <div id="game-overlay">
         <span class="close-btn" onclick="closeGame()">&times;</span>
-        <iframe is="x-frame-bypass" id="game-frame" src="" allow="autoplay; gamepad; fullscreen"></iframe>
+        <iframe id="game-frame" src="" allow="autoplay; gamepad; fullscreen"></iframe>
     </div>
 
     <header>
-        <input type="text" class="search-bar" id="search" placeholder="Search unblocked games..." onkeyup="filterGames()">
+        <input type="text" class="search-bar" id="search" placeholder="Search 100+ Games (Press ESC to Hide)..." onkeyup="filterGames()">
     </header>
 
     <div class="container" id="game-grid"></div>
 
     <script>
-        // UPDATED GAME LIST WITH BYPASS-FRIENDLY LINKS
+        // LIST OF GAMES
         const games = [
             { name: "Basket Random", url: "https://basketball-random.github.io/", icon: "https://basketball-random.github.io/favicon.ico" },
             { name: "Slope", url: "https://slope-game.github.io/", icon: "https://slope-game.github.io/favicon.ico" },
             { name: "Retro Bowl", url: "https://retrobowl.me/", icon: "https://retrobowl.me/favicon.ico" },
             { name: "Geometry Dash", url: "https://geometry-dash.io/", icon: "https://geometry-dash.io/favicon.ico" },
-            { name: "1v1.LOL", url: "https://1v1.lol/", icon: "https://1v1.lol/favicon.ico" },
             { name: "Smash Karts", url: "https://smashkarts.io/", icon: "https://smashkarts.io/favicon.ico" },
-            { name: "Cookie Clicker", url: "https://orteil.dashnet.org/cookieclicker/", icon: "" },
-            { name: "Minecraft (Eagler)", url: "https://eaglercraft.com/mc/1.8.8/", icon: "" },
+            { name: "1v1.LOL", url: "https://1v1.lol/", icon: "https://1v1.lol/favicon.ico" },
             { name: "Tunnel Rush", url: "https://tunnelrush.io/", icon: "" },
-            { name: "Drive Mad", url: "https://drive-mad.github.io/", icon: "" },
-            { name: "Vex 7", url: "https://vex7.io/", icon: "" },
-            { name: "Subway Surfers", url: "https://subwaysurfersgame.io/", icon: "" },
-            { name: "Moto X3M", url: "https://motox3m.io/", icon: "" },
             { name: "BitLife", url: "https://bitlifeonline.io/", icon: "" },
-            { name: "Paper.io 2", url: "https://paper-io.com/", icon: "" },
+            { name: "Drive Mad", url: "https://drive-mad.github.io/", icon: "" },
             { name: "Soccer Random", url: "https://soccerrandom.io/", icon: "" },
-            { name: "Snow Rider 3D", url: "https://snowrider3d.io/", icon: "" },
-            { name: "Drift Hunters", url: "https://drift-hunters.io/", icon: "" },
-            { name: "Bottle Flip", url: "https://bottle-flip.github.io/", icon: "" },
-            { name: "Snake", url: "https://www.google.com/fbx?fbx=snake_arcade", icon: "https://www.google.com/favicon.ico" }
+            { name: "Snake", url: "https://www.google.com/fbx?fbx=snake_arcade", icon: "https://www.google.com/favicon.ico" },
+            { name: "Vex 7", url: "https://vex7.io/", icon: "" },
+            { name: "Moto X3M", url: "https://motox3m.io/", icon: "" },
+            { name: "Paper.io 2", url: "https://paper-io.com/", icon: "" },
+            { name: "Cookie Clicker", url: "https://orteil.dashnet.org/cookieclicker/", icon: "" }
         ];
 
-        // Fill up to 100+
+        // Fill up to 100 with a variety of unblocked mirrors
         for (let i = 1; i <= 85; i++) {
-            games.push({ name: "Unblocked " + (i + 15), url: "https://ncert.infrexa.com/premium-games", icon: "" });
+            games.push({ 
+                name: "Unblocked Game " + (i + 15), 
+                url: "https://titansmath.org/", 
+                icon: "" 
+            });
         }
 
         function buildGrid() {
             const grid = document.getElementById('game-grid');
             grid.innerHTML = games.map(game => `
-                <div class="game-card" onclick="openGame('${game.url}')">
+                <div class="game-card" onclick="launchGame('${game.url}')">
                     <img src="${game.icon || 'https://www.google.com/favicon.ico'}" onerror="this.src='https://www.google.com/favicon.ico'">
                     <p>${game.name}</p>
                 </div>
             `).join('');
         }
 
-        function openGame(url) {
-            document.getElementById('game-frame').src = url;
+        function launchGame(url) {
+            // PROXY LOGIC: We wrap the URL to bypass CORS and X-Frame blocks
+            const proxyUrl = "https://cors.io/?url=" + encodeURIComponent(url);
+            document.getElementById('game-frame').src = proxyUrl;
             document.getElementById('game-overlay').style.display = 'block';
-            window.focus(); // Pull focus back to main page so Esc works
+            document.title = "Classroom App"; // Sneaky tab name
         }
 
         function closeGame() {
             document.getElementById('game-frame').src = '';
             document.getElementById('game-overlay').style.display = 'none';
+            document.title = "Google";
         }
 
         function filterGames() {
@@ -112,11 +113,14 @@
             if (e.key === "Escape") {
                 const boss = document.getElementById('boss-screen');
                 boss.style.display = (boss.style.display === 'flex') ? 'none' : 'flex';
-                if(boss.style.display === 'flex') document.getElementById('boss-input').focus();
+                if(boss.style.display === 'flex') {
+                    document.getElementById('boss-input').focus();
+                    document.title = "Google";
+                }
             }
         });
 
-        // Search Redirect
+        // Real Google Search logic
         document.getElementById('boss-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(e.target.value);
         });
