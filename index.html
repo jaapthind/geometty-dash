@@ -3,104 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google</title>
+    <title>most important black history figures - Google Search</title>
     <link rel="icon" type="image/x-icon" href="https://www.google.com/favicon.ico">
     <style>
-        :root { --primary: #4285f4; --bg: #0b0b0b; --card: #1a1a1a; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; background: var(--bg); color: white; overflow: hidden; }
+        body { font-family: 'arial', sans-serif; background: #fff; color: #202124; }
 
-        header { padding: 25px; text-align: center; background: #000; border-bottom: 2px solid var(--primary); }
+        /* GOOGLE HEADER */
+        header { border-bottom: 1px solid #ebebeb; padding: 20px 0 0 150px; position: sticky; top: 0; background: #fff; z-index: 10; }
+        .logo { position: absolute; left: 30px; top: 25px; cursor: pointer; }
+        .search-container { position: relative; width: 600px; margin-bottom: 20px; }
+        .search-bar { width: 100%; height: 44px; border: 1px solid #dfe1e5; border-radius: 24px; padding: 0 50px 0 20px; font-size: 16px; outline: none; box-shadow: none; }
         
-        /* The Grid */
-        .container { padding: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
-        .game-card { background: var(--card); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
-        .game-card:hover { transform: translateY(-5px); border-color: var(--primary); background: #222; }
-        .game-card img { width: 64px; height: 64px; border-radius: 12px; margin-bottom: 10px; }
-        .game-card p { font-size: 14px; font-weight: bold; }
+        /* SEARCH TABS */
+        .tabs { display: flex; gap: 20px; font-size: 14px; color: #70757a; padding-left: 10px; }
+        .tab.active { color: #1a73e8; border-bottom: 3px solid #1a73e8; padding-bottom: 10px; }
 
-        /* Game Player Overlay */
-        #game-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; }
+        /* RESULTS AREA */
+        main { margin-left: 150px; margin-top: 20px; max-width: 650px; }
+        .stats { color: #70757a; font-size: 14px; margin-bottom: 20px; }
+        
+        .result { margin-bottom: 30px; }
+        .result cite { font-style: normal; font-size: 14px; color: #202124; margin-bottom: 4px; display: block; }
+        .result h3 { color: #1a0dab; font-size: 20px; font-weight: 400; cursor: pointer; text-decoration: none; }
+        .result h3:hover { text-decoration: underline; }
+        .result p { font-size: 14px; line-height: 1.58; color: #4d5156; margin-top: 4px; }
+
+        /* FULLSCREEN GAME PLAYER */
+        #game-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; }
         iframe { width: 100%; height: 100%; border: none; }
-        .close-btn { position: fixed; top: 15px; right: 25px; font-size: 40px; color: white; cursor: pointer; z-index: 6000; opacity: 0.6; }
-
-        /* Boss Screen Disguise */
-        #boss-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10000; flex-direction: column; align-items: center; padding-top: 15vh; }
-        .google-logo { width: 272px; margin-bottom: 25px; }
-        .fake-search { width: 584px; max-width: 90%; height: 44px; border: 1px solid #dfe1e5; border-radius: 24px; padding: 0 45px; font-size: 16px; outline: none; }
     </style>
 </head>
 <body>
 
-    <div id="boss-screen">
-        <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" class="google-logo">
-        <input type="text" id="boss-input" class="fake-search" placeholder="Search Google or type a URL">
-    </div>
+    <header>
+        <div class="logo">
+            <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" width="92" height="30" onclick="location.reload()">
+        </div>
+        <div class="search-container">
+            <input type="text" class="search-bar" value="most important black history figures">
+        </div>
+        <div class="tabs">
+            <div class="tab active">All</div>
+            <div class="tab">Images</div>
+            <div class="tab">Videos</div>
+            <div class="tab">News</div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <p class="stats">About 1,240,000,000 results (0.54 seconds)</p>
+
+        <div class="result">
+            <cite>https://www.biography.com › people › black-history-icons</cite>
+            <h3 onclick="playGame('https://v7p9m8i5.ssl.hwcdn.net/html5/203417/index.html')">Top 10 Most Influential Figures in Black History - Biography</h3>
+            <p>Explore the lives of the most important figures in Black history. From civil rights leaders to world-class athletes, discover the impact they made on the world today.</p>
+        </div>
+
+        <div class="result">
+            <cite>https://history.com › topics › black-history › black-history-facts</cite>
+            <h3 onclick="playGame('https://kdata1.com/2020/05/slope/')">Black History Milestones: Timeline & Important Figures - HISTORY</h3>
+            <p>A comprehensive look at the key moments and individuals who defined the struggle for equality and the celebration of African American culture.</p>
+        </div>
+    </main>
 
     <div id="game-overlay">
-        <span class="close-btn" onclick="closeGame()">&times;</span>
         <iframe id="game-frame" src="" allow="autoplay; gamepad; fullscreen"></iframe>
     </div>
 
-    <header>
-        <h1 style="color: var(--primary);">Classroom Tools</h1>
-    </header>
-
-    <div class="container">
-        <div class="game-card" onclick="openGame('https://v7p9m8i5.ssl.hwcdn.net/html5/203417/index.html')">
-            <img src="https://basketballrandom.io/favicon.ico" alt="Basket">
-            <p>Basket Random</p>
-        </div>
-
-        <div class="game-card" onclick="openGame('https://kdata1.com/2020/05/slope/')">
-            <img src="https://slope-game.github.io/favicon.ico" alt="Slope">
-            <p>Slope</p>
-        </div>
-
-        <div class="game-card" onclick="openGame('https://game316311.konggames.com/gamefile/2020/09/01/1598947474747/index.html')">
-            <img src="https://retrobowl.me/favicon.ico" alt="Retro">
-            <p>Retro Bowl</p>
-        </div>
-
-        <div class="game-card" onclick="openGame('https://smashkarts.io/s/play')">
-            <img src="https://smashkarts.io/favicon.ico" alt="Smash">
-            <p>Smash Karts</p>
-        </div>
-
-        <div class="game-card" onclick="openGame('https://www.google.com/fbx?fbx=snake_arcade')">
-            <img src="https://www.google.com/favicon.ico" alt="Snake">
-            <p>Google Snake</p>
-        </div>
-    </div>
-
     <script>
-        function openGame(url) {
-            document.getElementById('game-frame').src = url;
-            document.getElementById('game-overlay').style.display = 'block';
-            document.title = "Classroom Notes"; 
-        }
+        const overlay = document.getElementById('game-overlay');
+        const frame = document.getElementById('game-frame');
 
-        function closeGame() {
-            document.getElementById('game-frame').src = '';
-            document.getElementById('game-overlay').style.display = 'none';
-            document.title = "Google";
+        function playGame(url) {
+            frame.src = url;
+            overlay.style.display = 'block';
+            document.title = "Google Search"; // Keep the tab name looking real
         }
 
         // BOSS KEY (ESC)
         document.addEventListener('keydown', (e) => {
             if (e.key === "Escape") {
-                const boss = document.getElementById('boss-screen');
-                boss.style.display = (boss.style.display === 'flex') ? 'none' : 'flex';
-                if(boss.style.display === 'flex') {
-                    document.getElementById('boss-input').focus();
-                    document.title = "Google";
-                }
+                // Instantly hide game and go back to results
+                frame.src = '';
+                overlay.style.display = 'none';
+                document.title = "most important black history figures - Google Search";
             }
-        });
-
-        // Search Redirect
-        document.getElementById('boss-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(e.target.value);
         });
     </script>
 </body>
