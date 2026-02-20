@@ -3,68 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google</title> <style>
+    <title>Google</title>
+    <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
 
-        /* The Layout */
-        .main-ui { display: flex; width: 100%; height: 100vh; transition: opacity 0.2s; }
-        .game-box { flex: 3; background: #000; position: relative; }
-        .chat-box { flex: 1; min-width: 320px; background: #1a1a1a; border-left: 2px solid #ff4757; }
-
-        /* Performance Fixes */
-        iframe {
-            width: 100%; height: 100%; border: none;
-            /* Force Hardware Acceleration */
-            transform: translateZ(0); 
-            will-change: transform;
+        /* GPU ENGINE: Eliminates Stuttering */
+        .viewport {
+            display: flex; width: 100%; height: 100vh;
+            transform: translate3d(0,0,0); /* Forces GPU render */
+            will-change: opacity;
+            transition: opacity 0.05s linear;
         }
+        .game-view { flex: 3.5; background: #000; }
+        .chat-view { flex: 1; min-width: 320px; background: #1a1a1a; border-left: 1px solid #333; }
+        iframe { width: 100%; height: 100%; border: none; }
 
-        /* The "Boss Key" Hide Screen */
+        /* THE GOOGLE CLONE (Boss Screen) */
         #boss-screen {
             display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: white;
-            z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%; background: #fff;
+            z-index: 10000; flex-direction: column; align-items: center; padding-top: 15vh;
         }
-        .fake-search { width: 600px; max-width: 90%; }
+        .google-logo { width: 272px; margin-bottom: 30px; }
+        .search-container { position: relative; width: 584px; max-width: 90%; }
+        .real-search-input {
+            width: 100%; height: 44px; padding: 0 45px;
+            font-size: 16px; border: 1px solid #dfe1e5;
+            border-radius: 24px; outline: none;
+        }
+        .real-search-input:hover, .real-search-input:focus {
+            box-shadow: 0 1px 6px rgba(32,33,36,.28);
+            border-color: rgba(223,225,229,0);
+        }
+        .search-icon { position: absolute; left: 15px; top: 12px; color: #9aa0a6; }
     </style>
 </head>
 <body>
 
     <div id="boss-screen">
-        <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" class="fake-search">
-        <div style="margin-top:20px; width: 500px; height: 40px; border: 1px solid #dfe1e5; border-radius: 24px;"></div>
-        <p style="color: #70757a; margin-top: 20px;">Search results for: "C++ Programming Tutorials"</p>
+        <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" class="google-logo">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="real-search-input" id="search-bar" placeholder="Search Google or type a URL" autocomplete="off">
+        </div>
+        <div style="margin-top: 30px;">
+            <button style="padding: 10px 15px; border: 1px solid #f8f9fa; background: #f8f9fa; border-radius: 4px; color: #3c4043; margin-right: 10px;">Google Search</button>
+            <button style="padding: 10px 15px; border: 1px solid #f8f9fa; background: #f8f9fa; border-radius: 4px; color: #3c4043;">I'm Feeling Lucky</button>
+        </div>
     </div>
 
-    <div class="main-ui" id="game-ui">
-        <div class="game-box">
-            <iframe 
-                src="https://smashkarts.io/" 
-                allow="autoplay; gamepad; fullscreen; accelerometer; gyroscope" 
-                loading="eager">
-            </iframe>
+    <div class="viewport" id="game-ui">
+        <div class="game-view">
+            <iframe src="https://smashkarts.io/" allow="autoplay; gamepad; fullscreen"></iframe>
         </div>
-        <div class="chat-box">
+        <div class="chat-view">
             <iframe src="https://deadsimplechat.com/J4fFLy4Ek"></iframe>
         </div>
     </div>
 
     <script>
-        // BOSS KEY SCRIPT
-        document.addEventListener('keydown', function(e) {
-            // Press ESCAPE to hide/show
+        const boss = document.getElementById('boss-screen');
+        const game = document.getElementById('game-ui');
+        const searchInput = document.getElementById('search-bar');
+
+        // ESCAPE KEY TO TOGGLE
+        document.addEventListener('keydown', (e) => {
             if (e.key === "Escape") {
-                var boss = document.getElementById('boss-screen');
-                var game = document.getElementById('game-ui');
-                
                 if (boss.style.display === "flex") {
                     boss.style.display = "none";
                     game.style.opacity = "1";
+                    document.title = "Smash Karts Portal";
                 } else {
                     boss.style.display = "flex";
                     game.style.opacity = "0";
+                    document.title = "Google";
+                    searchInput.focus(); // Instant focus so you can start typing
                 }
+            }
+        });
+
+        // ACTUALLY SEARCH GOOGLE
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && searchInput.value !== "") {
+                window.open('https://www.google.com/search?q=' + encodeURIComponent(searchInput.value), '_blank');
             }
         });
     </script>
