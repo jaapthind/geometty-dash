@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Glass Workspace</title>
+    <title>Liquid Workspace: Immersive Mode</title>
     <style>
         :root {
             --bg: #050505;
             --accent: #58a6ff;
             --glass-border: rgba(255, 255, 255, 0.2);
-            --glass-surface: rgba(255, 255, 255, 0.05);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
         body {
             background: var(--bg);
@@ -25,295 +24,221 @@
         }
 
         /* --- FULL PAGE LIQUID BACKGROUND --- */
-        #bg-canvas-container {
+        #canvas-container {
             position: fixed;
             inset: 0;
             z-index: -2;
-            filter: url(#glass-distortion); /* Applying your filter to the whole background */
-            background: linear-gradient(45deg, #0b0c10, #1a1c23);
+            filter: url(#glass-distortion);
+            background: #000;
         }
 
-        #bg-canvas {
-            width: 100%;
-            height: 100%;
-        }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        /* Hide the raw video feed */
+        #webcam { position: absolute; opacity: 0; pointer-events: none; }
 
         /* --- SVG FILTER --- */
         .svg-filters { position: absolute; width: 0; height: 0; }
 
-        /* --- THE LIQUID GLASS BOXES --- */
+        /* --- UI COMPONENTS --- */
         .liquid-glass-card {
             position: relative;
             width: 380px;
             height: 550px;
             border-radius: 28px;
-            isolation: isolate;
-            box-shadow: 0px 20px 50px rgba(0,0,0,0.5);
             border: 1px solid var(--glass-border);
-            overflow: hidden;
-            background: var(--glass-surface);
-        }
-
-        /* Refraction Effect */
-        .liquid-glass-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-        }
-
-        .widget-content {
-            padding: 25px;
-            height: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
+            padding: 25px;
             color: white;
             z-index: 10;
         }
 
-        /* --- CHAT HUB --- */
         #chat-wrapper {
-            width: 500px;
+            width: 550px;
             height: 85vh;
             border-radius: 24px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.4);
             border: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 5;
         }
 
-        .relay-tag {
-            padding: 12px;
-            background: rgba(88, 166, 255, 0.1);
-            font-size: 11px;
-            color: var(--accent);
+        iframe { flex-grow: 1; border: none; opacity: 0.8; }
+
+        .permission-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
             text-align: center;
-            letter-spacing: 3px;
+        }
+
+        .btn-start {
+            padding: 15px 40px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            border-radius: 30px;
             font-weight: bold;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        iframe { flex-grow: 1; border: none; filter: grayscale(0.2) contrast(1.1); }
-
-        /* --- ADVANCED COOKIE CLICKER --- */
-        .cookie-container { text-align: center; }
-        #cookie {
-            width: 140px;
-            filter: drop-shadow(0 0 20px rgba(255, 174, 66, 0.4));
             cursor: pointer;
-            transition: transform 0.05s ease;
-            margin: 20px 0;
+            margin-top: 20px;
+            font-size: 18px;
         }
-        #cookie:active { transform: scale(0.85) rotate(5deg); }
-        .score { font-size: 32px; font-weight: 800; color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
-        .upgrade-grid { display: grid; gap: 8px; margin-top: auto; }
-        .g-button {
-            background: rgba(255,255,255,0.08);
+
+        /* Cookie Clicker Styles */
+        .score { font-size: 40px; font-weight: 800; color: #f1c40f; margin: 10px 0; }
+        #cookie { width: 140px; cursor: pointer; transition: 0.1s; margin: 20px 0; }
+        #cookie:active { transform: scale(0.9); }
+        .upgrade-btn {
+            background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             padding: 12px;
             border-radius: 12px;
             color: white;
+            margin: 5px 0;
             cursor: pointer;
-            font-size: 13px;
-            transition: 0.3s;
             display: flex;
             justify-content: space-between;
         }
-        .g-button:hover:not(:disabled) { background: rgba(88, 166, 255, 0.2); border-color: var(--accent); }
-        .g-button:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        /* --- LIQUID SIM CARD --- */
-        #sim-canvas { width: 100%; height: 280px; border-radius: 16px; background: rgba(0,0,0,0.3); margin-top: 15px; }
     </style>
 </head>
 <body>
 
+<div id="permission-modal" class="permission-overlay">
+    <h1>Initialize Liquid Bio-Link</h1>
+    <p>This experience requires Camera and Microphone access for the interactive fluid effect.</p>
+    <button class="btn-start" onclick="initMedia()">Enter Workspace</button>
+</div>
+
+<video id="webcam" autoplay playsinline></video>
+
 <svg class="svg-filters">
   <defs>
-    <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.025 0.025" numOctaves="2" seed="92" result="noise" />
-      <feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
-      <feDisplacementMap in="SourceGraphic" in2="blurred" scale="65" xChannelSelector="R" yChannelSelector="G" />
+    <filter id="glass-distortion">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="1" result="noise">
+        <animate attributeName="baseFrequency" values="0.02;0.015;0.02" dur="10s" repeatCount="indefinite" />
+      </feTurbulence>
+      <feDisplacementMap id="displacement" in="SourceGraphic" in2="noise" scale="60" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </defs>
 </svg>
 
-<div id="bg-canvas-container">
-    <canvas id="bg-canvas"></canvas>
+<div id="canvas-container">
+    <canvas id="liquid-bg"></canvas>
 </div>
 
 <div class="liquid-glass-card">
-    <div class="widget-content">
-        <h2 style="font-size: 14px; opacity: 0.6; letter-spacing: 2px;">BAKERY_V4</h2>
-        <div class="cookie-container">
-            <div id="cookie-count" class="score">0</div>
-            <p id="cps-val" style="font-size: 12px; opacity: 0.8;">CPS: 0.0</p>
-            <img id="cookie" src="https://cdn-icons-png.flaticon.com/512/548/548427.png" onclick="clickCookie()">
-        </div>
-        <div class="upgrade-grid">
-            <button class="g-button" id="up-1" onclick="buy(1)"><span>Auto-Clicker</span> <b id="c-1">15</b></button>
-            <button class="g-button" id="up-2" onclick="buy(2)"><span>Grandma</span> <b id="c-2">100</b></button>
-            <button class="g-button" id="up-3" onclick="buy(3)"><span>Cookie Factory</span> <b id="c-3">500</b></button>
-            <button class="g-button" id="prestige" onclick="prestige()" style="color: #58a6ff; font-weight: bold; margin-top: 10px;"><span>PRESTIGE (Reset)</span> <b id="boost">x1.0</b></button>
-        </div>
+    <h2 style="font-size: 12px; letter-spacing: 2px; opacity: 0.6;">BIO_SYNC BAKERY</h2>
+    <div id="cookie-count" class="score">0</div>
+    <center><img id="cookie" src="https://cdn-icons-png.flaticon.com/512/548/548427.png" onclick="clickCookie()"></center>
+    <div style="margin-top: auto;">
+        <button class="upgrade-btn" onclick="buy(10)"><span>Neural Baker</span> <b>10</b></button>
+        <button class="upgrade-btn" onclick="buy(100)"><span>Quantum Oven</span> <b>100</b></button>
     </div>
 </div>
 
 <div id="chat-wrapper">
-    <div class="relay-tag">SECURE_COMM_CHANNEL // NODE_09</div>
     <iframe src="https://deadsimplechat.com/J4fFLy4Ek"></iframe>
 </div>
 
-<div class="liquid-glass-card">
-    <div class="widget-content">
-        <h2 style="font-size: 14px; opacity: 0.6; letter-spacing: 2px;">FLUID_CORE</h2>
-        <canvas id="sim-canvas"></canvas>
-        <div style="margin-top: 20px; font-size: 13px; line-height: 1.6;">
-            <p>• <b>Interact:</b> Drag to stir the fluid.</p>
-            <p>• <b>Dynamic:</b> Reacts to background noise.</p>
-            <button class="g-button" style="margin-top: 15px; width: 100%; justify-content: center;" onclick="resetSim()">Reset Simulation</button>
-        </div>
-        <p style="margin-top: auto; font-size: 10px; opacity: 0.4; text-align: center;">V3 LIQUID ENGINE ACTIVE</p>
-    </div>
-</div>
-
 <script>
-    /* --- 1. FULL PAGE BACKGROUND SIMULATION --- */
-    const bgCanvas = document.getElementById('bg-canvas');
-    const bgCtx = bgCanvas.getContext('2d');
-    let blobs = [];
+    const canvas = document.getElementById('liquid-bg');
+    const ctx = canvas.getContext('2d');
+    const video = document.getElementById('webcam');
+    const displace = document.getElementById('displacement');
+    let audioContext, analyser, dataArray;
+    let cookies = 0;
 
     function resize() {
-        bgCanvas.width = window.innerWidth;
-        bgCanvas.height = window.innerHeight;
-    }
-
-    class Blob {
-        constructor() {
-            this.x = Math.random() * bgCanvas.width;
-            this.y = Math.random() * bgCanvas.height;
-            this.r = 150 + Math.random() * 200;
-            this.vx = (Math.random() - 0.5) * 2;
-            this.vy = (Math.random() - 0.5) * 2;
-            this.color = `hsla(${200 + Math.random() * 40}, 70%, 50%, 0.3)`;
-        }
-        update() {
-            this.x += this.vx; this.y += this.vy;
-            if(this.x < -this.r) this.x = bgCanvas.width + this.r;
-            if(this.x > bgCanvas.width + this.r) this.x = -this.r;
-            if(this.y < -this.r) this.y = bgCanvas.height + this.r;
-            if(this.y > bgCanvas.height + this.r) this.y = -this.r;
-        }
-        draw() {
-            bgCtx.fillStyle = this.color;
-            bgCtx.beginPath();
-            bgCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-            bgCtx.fill();
-        }
-    }
-
-    for(let i=0; i<8; i++) blobs.push(new Blob());
-
-    function animBg() {
-        bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
-        bgCtx.filter = "blur(80px)";
-        blobs.forEach(b => { b.update(); b.draw(); });
-        requestAnimationFrame(animBg);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
     window.addEventListener('resize', resize);
     resize();
-    animBg();
 
-    /* --- 2. ADVANCED COOKIE CLICKER --- */
-    let cookies = 0;
-    let boost = 1.0;
-    let items = { 1: { c: 15, p: 0.5, n: 0 }, 2: { c: 100, p: 3, n: 0 }, 3: { c: 500, p: 15, n: 0 } };
+    async function initMedia() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            video.srcObject = stream;
+            document.getElementById('permission-modal').style.display = 'none';
 
-    function clickCookie() {
-        cookies += (1 * boost);
-        refresh();
-    }
+            // Audio Setup
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-    function buy(id) {
-        if(cookies >= items[id].c) {
-            cookies -= items[id].c;
-            items[id].n++;
-            items[id].c = Math.floor(items[id].c * 1.25);
-            refresh();
+            render();
+        } catch (err) {
+            alert("Camera/Mic access is required for the full experience.");
         }
     }
 
-    function prestige() {
-        if(cookies > 1000) {
-            boost += (cookies / 5000);
-            cookies = 0;
-            Object.keys(items).forEach(k => { items[k].n = 0; });
-            items[1].c = 15; items[2].c = 100; items[3].c = 500;
-            refresh();
-        } else { alert("Need at least 1,000 cookies to prestige!"); }
+    let angle = 0;
+    function render() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Get Audio Level
+        let volume = 0;
+        if (analyser) {
+            analyser.getByteFrequencyData(dataArray);
+            volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            // Map volume to displacement scale
+            displace.setAttribute('scale', 40 + (volume * 0.8));
+        }
+
+        // Create Moving Camera Blobs
+        const blobCount = 5;
+        for (let i = 0; i < blobCount; i++) {
+            const t = Date.now() * 0.001;
+            const x = canvas.width / 2 + Math.cos(t * 0.5 + i) * (canvas.width * 0.3);
+            const y = canvas.height / 2 + Math.sin(t * 0.3 + i) * (canvas.height * 0.3);
+            const size = 300 + (volume * 2);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            ctx.clip();
+            
+            // Draw the webcam feed inside the blob
+            // We flip it to act as a mirror
+            ctx.translate(x + size/2, y - size/2);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, size, size);
+            ctx.restore();
+        }
+
+        requestAnimationFrame(render);
     }
 
-    function refresh() {
-        document.getElementById('cookie-count').innerText = Math.floor(cookies).toLocaleString();
-        document.getElementById('boost').innerText = `x${boost.toFixed(1)}`;
-        let cps = 0;
-        Object.keys(items).forEach(id => {
-            document.getElementById(`c-${id}`).innerText = items[id].c;
-            document.getElementById(`up-${id}`).disabled = cookies < items[id].c;
-            cps += items[id].n * items[id].p;
-        });
-        document.getElementById('cps-val').innerText = `CPS: ${(cps * boost).toFixed(1)}`;
+    function clickCookie() {
+        cookies++;
+        document.getElementById('cookie-count').innerText = cookies;
     }
 
-    setInterval(() => {
-        let cps = 0;
-        Object.keys(items).forEach(id => { cps += items[id].n * items[id].p; });
-        cookies += (cps * boost) / 10;
-        refresh();
-    }, 100);
-
-    /* --- 3. LIQUID INTERACTION SIM --- */
-    const sCanvas = document.getElementById('sim-canvas');
-    const sCtx = sCanvas.getContext('2d');
-    let drops = [];
-
-    function resetSim() {
-        drops = [];
-        for(let i=0; i<30; i++) drops.push({x: Math.random()*300, y: Math.random()*280, vx: 0, vy: 0, r: 10+Math.random()*15});
+    function buy(cost) {
+        if(cookies >= cost) {
+            cookies -= cost;
+            document.getElementById('cookie-count').innerText = cookies;
+            alert("Upgrade Synced!");
+        }
     }
-
-    sCanvas.addEventListener('mousemove', (e) => {
-        const rect = sCanvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        drops.forEach(d => {
-            let diffX = d.x - mx;
-            let diffY = d.y - my;
-            let dist = Math.sqrt(diffX**2 + diffY**2);
-            if(dist < 60) { d.vx += diffX*0.05; d.vy += diffY*0.05; }
-        });
-    });
-
-    function drawSim() {
-        sCtx.clearRect(0,0, sCanvas.width, sCanvas.height);
-        sCtx.fillStyle = "#58a6ff";
-        sCtx.filter = "blur(8px)";
-        drops.forEach(d => {
-            d.x += d.vx; d.y += d.vy;
-            d.vx *= 0.95; d.vy *= 0.95;
-            if(d.x < 0 || d.x > sCanvas.width) d.vx *= -1;
-            if(d.y < 0 || d.y > sCanvas.height) d.vy *= -1;
-            sCtx.beginPath(); sCtx.arc(d.x, d.y, d.r, 0, Math.PI*2); sCtx.fill();
-        });
-        requestAnimationFrame(drawSim);
-    }
-    resetSim(); drawSim();
 </script>
 
 </body>
