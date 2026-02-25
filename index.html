@@ -3,321 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Liquid Glass OS</title>
+    <title>Liquid Glass V7 // Molten Engine</title>
     <style>
         :root {
-            --accent: #00d4ff;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.15);
-            --panel-bg: rgba(0, 0, 0, 0.6);
+            --glass-clear: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --accent: #ffffff;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: #000; height: 100vh; overflow: hidden; color: #fff; display: flex; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #000; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 
-        /* --- THE ENGINE CANVAS --- */
-        #render-surface {
+        /* --- THE MOLTEN ENGINE --- */
+        #molten-canvas {
             position: fixed;
             inset: 0;
             z-index: -1;
-            filter: url(#advanced-refraction);
-            transform: scale(1.05); /* Prevents edge clipping during distortion */
+            filter: url(#molten-glass-filter) contrast(1.2) saturate(1.4);
+            background: radial-gradient(circle at center, #111, #000);
         }
 
-        /* --- UI OVERLAY --- */
-        #ui-layer {
-            position: relative;
+        /* --- UI WRAPPER --- */
+        #interface {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
             z-index: 10;
-            width: 100%;
-            height: 100%;
-            display: flex;
+        }
+
+        /* --- SETTINGS: ACTUAL LIQUID GLASS STYLE --- */
+        .glass-panel {
+            width: 320px;
             padding: 30px;
-            gap: 30px;
-            pointer-events: none;
-        }
-
-        .panel {
-            pointer-events: auto;
-            background: var(--panel-bg);
-            backdrop-filter: blur(30px) saturate(150%);
-            -webkit-backdrop-filter: blur(30px) saturate(150%);
-            border: 1px solid var(--border);
             border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: var(--glass-clear);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* Left: Settings Panel */
-        #settings-panel { width: 350px; padding: 25px; }
-        #settings-panel h2 { font-size: 14px; letter-spacing: 4px; color: var(--accent); margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-
-        .setting-group { margin-bottom: 20px; }
-        .setting-group label { display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; opacity: 0.7; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-
-        /* Center: Workspace */
-        #workspace-panel { flex-grow: 1; overflow: hidden; }
-        .status-bar { padding: 10px 20px; background: rgba(255,255,255,0.05); font-size: 10px; font-family: monospace; display: flex; justify-content: space-between; }
-
-        /* --- PERMISSION MODAL --- */
-        #gatekeeper {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+        /* --- NORMAL SIZED CHAT --- */
+        #chat-container {
+            width: 420px; /* Small/Medium Normal Size */
+            height: 600px;
+            border-radius: 24px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        .auth-box {
-            max-width: 500px;
-            padding: 40px;
-            border: 1px solid var(--accent);
-            border-radius: 40px;
-            background: radial-gradient(circle at top left, #111, #000);
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Controls */
+        h2 { font-size: 11px; letter-spacing: 3px; margin-bottom: 20px; opacity: 0.7; }
+        .control-row { margin-bottom: 15px; }
+        label { display: block; font-size: 10px; margin-bottom: 5px; font-weight: bold; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #fff; }
+
+        /* Permissions Modal */
+        #overlay {
+            position: fixed; inset: 0; background: #000; z-index: 999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        .perm-list { text-align: left; margin: 20px 0; font-size: 13px; line-height: 1.8; }
-        .perm-item { display: flex; align-items: center; gap: 10px; color: #888; }
-        .perm-item.granted { color: var(--accent); }
-
-        .auth-btn {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
+        .start-btn {
+            padding: 20px 50px; background: white; color: black; border: none;
+            border-radius: 40px; font-weight: 900; cursor: pointer; font-size: 16px;
         }
-
-        .auth-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px var(--accent); }
-
-        video#raw-feed { position: absolute; opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div id="gatekeeper">
-        <div class="auth-box">
-            <h1 style="letter-spacing: 5px;">BIO-LINK V6</h1>
-            <p style="opacity: 0.6; margin-top: 10px;">Initializing Immersive Liquid Workspace</p>
-            <div class="perm-list">
-                <div class="perm-item" id="p1">○ Visual Capture (Webcam)</div>
-                <div class="perm-item" id="p2">○ Frequency Analysis (Microphone)</div>
-                <div class="perm-item" id="p3">○ Geo-Spatial Thermal Sync (Location)</div>
-                <div class="perm-item" id="p4">○ Kinetic Distortion (Motion Sensors)</div>
-                <div class="perm-item" id="p5">○ Energy-Level Adaptation (Battery)</div>
-            </div>
-            <button class="auth-btn" onclick="startUplink()">GRANT ALL PERMISSIONS</button>
-        </div>
+    <div id="overlay">
+        <h1 style="color:white; letter-spacing:10px; margin-bottom:20px;">SYSTEM BOOT</h1>
+        <button class="start-btn" onclick="bootSystem()">INITIALIZE MOLTEN LINK</button>
     </div>
 
-    <video id="raw-feed" autoplay playsinline></video>
-
-    <svg style="position:absolute; width:0; height:0;">
+    <svg width="0" height="0">
         <defs>
-            <filter id="advanced-refraction">
-                <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.01" numOctaves="3" seed="1" result="noise" />
-                <feGaussianBlur in="noise" stdDeviation="3" result="softNoise" />
-                <feDisplacementMap id="disp" in="SourceGraphic" in2="softNoise" scale="100" xChannelSelector="R" yChannelSelector="G" />
+            <filter id="molten-glass-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.01 0.015" numOctaves="2" seed="5" result="noise">
+                    <animate attributeName="baseFrequency" values="0.01 0.015; 0.015 0.01; 0.01 0.015" dur="20s" repeatCount="indefinite"/>
+                </feTurbulence>
+                <feGaussianBlur in="noise" stdDeviation="5" result="blurredNoise"/>
+                <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="120" xChannelSelector="R" yChannelSelector="G"/>
             </filter>
         </defs>
     </svg>
 
-    <canvas id="render-surface"></canvas>
+    <canvas id="molten-canvas"></canvas>
+    <video id="v" style="display:none" autoplay playsinline></video>
 
-    <div id="ui-layer">
-        <div class="panel" id="settings-panel">
-            <h2>LIQUID CONTROL</h2>
-            
-            <div class="setting-group">
-                <label>Viscosity (Refraction Scale)</label>
-                <input type="range" id="refraction-slider" min="0" max="300" value="100">
+    <div id="interface">
+        <div class="glass-panel">
+            <h2>LIQUID CORE V7</h2>
+            <div class="control-row">
+                <label>REFRACTION INTENSITY</label>
+                <input type="range" id="refract" min="10" max="300" value="150">
             </div>
-
-            <div class="setting-group">
-                <label>Flow Rate (Noise Speed)</label>
-                <input type="range" id="speed-slider" min="1" max="100" value="20">
+            <div class="control-row">
+                <label>RAINBOW DENSITY</label>
+                <input type="range" id="rainbow" min="0" max="100" value="60">
             </div>
-
-            <div class="setting-group">
-                <label>Bio-Sensitivity (Audio Gain)</label>
-                <input type="range" id="audio-slider" min="0" max="200" value="100">
+            <div class="control-row">
+                <label>FLUID SPEED</label>
+                <input type="range" id="speed" min="1" max="100" value="30">
             </div>
-
-            <div class="setting-group">
-                <label>Chroma Shift (Temperature)</label>
-                <input type="range" id="color-slider" min="0" max="360" value="200">
-            </div>
-
-            <div style="margin-top: auto;">
-                <p style="font-size: 10px; opacity: 0.5;">ENGINE: WEGL_LIQUID_V6.2</p>
-                <p id="geo-status" style="font-size: 10px; color: var(--accent);">LOCATION: SYNCING...</p>
+            <div class="control-row" style="margin-top:30px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+                <p id="lat-log" style="font-size:10px; color:#aaa;">GPS: OFFLINE</p>
+                <p id="cpu-load" style="font-size:10px; color:#aaa; margin-top:5px;">CPU_SYNC: READY</p>
             </div>
         </div>
 
-        <div class="panel" id="workspace-panel">
-            <div class="status-bar">
-                <span>ENCRYPTED_RELAY_NODE_01</span>
-                <span id="battery-status">BATTERY: --%</span>
-                <span id="gyro-status">MOTION: STABLE</span>
-            </div>
-            <iframe src="https://deadsimplechat.com/J4fFLy4Ek" style="width:100%; flex-grow:1; border:none; filter: contrast(1.1) brightness(0.9);"></iframe>
+        <div id="chat-container">
+            <iframe src="https://deadsimplechat.com/J4fFLy4Ek"></iframe>
         </div>
     </div>
 
 <script>
-    const canvas = document.getElementById('render-surface');
+    const canvas = document.getElementById('molten-canvas');
     const ctx = canvas.getContext('2d');
-    const video = document.getElementById('raw-feed');
-    const turb = document.getElementById('turb');
-    const disp = document.getElementById('disp');
+    const video = document.getElementById('v');
+    let audioData, analyser;
 
-    let audioContext, analyser, dataArray;
-    let blobs = [];
-    let params = { refraction: 100, speed: 0.01, audioGain: 1, hue: 200 };
+    async function bootSystem() {
+        document.getElementById('overlay').style.display = 'none';
 
-    // --- 1. THE PERMISSION SYSTEM ---
-    async function startUplink() {
-        try {
-            // A. Camera & Mic
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            video.srcObject = stream;
-            document.getElementById('p1').classList.add('granted');
-            document.getElementById('p2').classList.add('granted');
+        // 1. Camera & Mic
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        video.srcObject = stream;
 
-            // B. Geolocation
-            navigator.geolocation.getCurrentPosition((pos) => {
-                document.getElementById('p3').classList.add('granted');
-                document.getElementById('geo-status').innerText = `LOCATION: ${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)}`;
-                params.hue = (pos.coords.latitude + 90) * 2; // Color based on latitude!
-            });
+        // 2. Audio Setup
+        const ac = new AudioContext();
+        analyser = ac.createAnalyser();
+        ac.createMediaStreamSource(stream).connect(analyser);
+        audioData = new Uint8Array(analyser.frequencyBinCount);
 
-            // C. Device Motion (Orientation)
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                const res = await DeviceOrientationEvent.requestPermission();
-                if(res === 'granted') addMotion();
-            } else { addMotion(); }
-
-            // D. Battery
-            if (navigator.getBattery) {
-                const battery = await navigator.getBattery();
-                updateBattery(battery);
-                battery.addEventListener('levelchange', () => updateBattery(battery));
-                document.getElementById('p5').classList.add('granted');
-            }
-
-            // Initialization Complete
-            setTimeout(() => {
-                document.getElementById('gatekeeper').style.opacity = '0';
-                setTimeout(() => document.getElementById('gatekeeper').remove(), 500);
-                initEngine();
-            }, 1000);
-
-            setupAudio(stream);
-        } catch (e) {
-            alert("Uplink failed. All 5 permissions required.");
-            console.error(e);
-        }
-    }
-
-    function addMotion() {
-        window.addEventListener('deviceorientation', (e) => {
-            document.getElementById('p4').classList.add('granted');
-            const tiltX = e.beta / 90; // -1 to 1
-            const tiltY = e.gamma / 90;
-            document.getElementById('gyro-status').innerText = `MOTION: X:${tiltX.toFixed(1)} Y:${tiltY.toFixed(1)}`;
-            canvas.style.transform = `scale(1.1) translate(${tiltY * 30}px, ${tiltX * 30}px)`;
+        // 3. Location
+        navigator.geolocation.getCurrentPosition(p => {
+            document.getElementById('lat-log').innerText = `GPS: ${p.coords.latitude.toFixed(2)}N, ${p.coords.longitude.toFixed(2)}E`;
         });
+
+        requestAnimationFrame(render);
     }
 
-    function updateBattery(b) {
-        document.getElementById('battery-status').innerText = `BATTERY: ${Math.round(b.level * 100)}%`;
-        params.refraction = 50 + (b.level * 150); // Less refraction on low battery to "save" visual energy
-    }
-
-    function setupAudio(stream) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaStreamSource(stream);
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 64;
-        source.connect(analyser);
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-    }
-
-    // --- 2. THE LIQUID ENGINE ---
-    function initEngine() {
-        resize();
-        window.addEventListener('resize', resize);
-        
-        // Generate Bio-Blobs
-        for(let i=0; i<6; i++) {
-            blobs.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                r: 200 + Math.random() * 300,
-                vx: (Math.random() - 0.5) * 2,
-                vy: (Math.random() - 0.5) * 2
-            });
-        }
-        animate();
-    }
-
-    function resize() {
+    function render() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-    }
 
-    function animate() {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-
-        // Update settings from UI
-        params.refraction = document.getElementById('refraction-slider').value;
-        params.speed = document.getElementById('speed-slider').value / 1000;
-        params.audioGain = document.getElementById('audio-slider').value / 100;
-        const uiHue = document.getElementById('color-slider').value;
-
-        // Audio Reactive Logic
-        let volume = 0;
+        let vol = 0;
         if(analyser) {
-            analyser.getByteFrequencyData(dataArray);
-            volume = (dataArray.reduce((a, b) => a + b) / dataArray.length) * params.audioGain;
+            analyser.getByteFrequencyData(audioData);
+            vol = audioData.reduce((a,b) => a+b) / audioData.length;
         }
 
-        // Apply SVG Displacement Dynamics
-        const time = Date.now() * params.speed;
-        turb.setAttribute('baseFrequency', `${0.01 + (volume/1000)} ${0.01 + Math.sin(time)/100}`);
-        disp.setAttribute('scale', params.refraction + (volume * 2));
+        // Update SVG scale based on mic and slider
+        const baseRefract = document.getElementById('refract').value;
+        document.getElementById('molten-glass-filter').querySelector('feDisplacementMap').setAttribute('scale', Number(baseRefract) + (vol * 1.5));
 
-        // Draw Webcam Blobs
-        blobs.forEach((b, i) => {
-            b.x += b.vx * (1 + volume/20);
-            b.y += b.vy * (1 + volume/20);
+        // Draw Molten Rainbow Blobs
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        
+        const speed = document.getElementById('speed').value / 2000;
+        const rainbowVal = document.getElementById('rainbow').value;
+        const time = Date.now() * speed;
 
-            if(b.x < 0 || b.x > canvas.width) b.vx *= -1;
-            if(b.y < 0 || b.y > canvas.height) b.vy *= -1;
+        for(let i=0; i<8; i++) {
+            const x = canvas.width/2 + Math.cos(time + i) * (canvas.width * 0.3);
+            const y = canvas.height/2 + Math.sin(time*0.7 + i) * (canvas.height * 0.3);
+            const size = 400 + (vol * 2);
 
             ctx.save();
             ctx.beginPath();
-            ctx.arc(b.x, b.y, b.r + (volume * 1.5), 0, Math.PI * 2);
+            ctx.arc(x, y, size/2, 0, Math.PI*2);
             ctx.clip();
 
-            // The Liquid Look: Draw mirrored webcam feed with hue rotation
-            ctx.filter = `hue-rotate(${uiHue}deg) brightness(1.2) saturate(1.5)`;
-            ctx.translate(b.x + b.r, b.y - b.r);
-            ctx.scale(-1, 1);
-            ctx.drawImage(video, -b.r*2, 0, b.r*2.5, b.r*2.5);
+            // RAINBOW LIQUID LOGIC
+            const hue = (time * 50 + (i * 45)) % 360;
+            ctx.filter = `hue-rotate(${hue}deg) saturate(${rainbowVal}%) brightness(1.1)`;
+            ctx.drawImage(video, x - size/2, y - size/2, size, size);
             ctx.restore();
-        });
+        }
 
-        requestAnimationFrame(animate);
+        // Add a "Clear Glass" sheen over everything
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        ctx.fillRect(0,0, canvas.width, canvas.height);
+
+        requestAnimationFrame(render);
     }
 </script>
+
 </body>
 </html>
