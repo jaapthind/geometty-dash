@@ -1,420 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>macOS Tahoe - Hyper-Architecture Build v7.0</title>
-    <style>
-        /* ==========================================================================
-           1. CORE KERNEL DESIGN TOKENS (Liquid Glass)
-           ========================================================================== */
-        :root {
-            --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-            --glass-base: rgba(255, 255, 255, 0.18);
-            --glass-thick: rgba(255, 255, 255, 0.42);
-            --glass-dark: rgba(10, 10, 10, 0.72);
-            --blur-radius: blur(60px) saturate(220%) brightness(1.15);
-            --radius-win: 20px;
-            --radius-dock: 28px;
-            --shadow-win: 0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.2) inset;
-            --accent-blue: #007aff;
-            --menu-h: 32px;
-            --dock-h: 88px;
-        }
-
-        * {
-            margin: 0; padding: 0; box-sizing: border-box; font-family: var(--apple-font);
-            cursor: url('https://cdn.custom-cursor.com/db/9753/32/apple-spinning-wait-cursor-pointer.png'), auto !important;
-            user-select: none; -webkit-font-smoothing: antialiased;
-        }
-
-        body, html { width: 100vw; height: 100vh; overflow: hidden; background: #000; position: relative; }
-
-        /* ==========================================================================
-           2. TAHOE LIVE VIDEO WORKER (4K)
-           ========================================================================== */
-        #wallpaper-engine { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-        #wallpaper-engine iframe {
-            width: 140vw; height: 140vh; position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); filter: contrast(1.1) brightness(0.9);
-        }
-        #desktop-tint { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 20%); }
-
-        /* ==========================================================================
-           3. SYSTEM TOP NAVIGATION (LIQUID GLASS)
-           ========================================================================== */
-        #menu-bar {
-            position: absolute; top: 0; width: 100%; height: var(--menu-h);
-            background: rgba(255, 255, 255, 0.12); backdrop-filter: var(--blur-radius); -webkit-backdrop-filter: var(--blur-radius);
-            border-bottom: 0.5px solid rgba(255,255,255,0.2);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; color: #fff; font-size: 13.5px; font-weight: 500; z-index: 1000000;
-        }
-        .menu-left, .menu-right { display: flex; align-items: center; gap: 18px; }
-        .apple-logo { font-size: 19px; }
-
-        /* ==========================================================================
-           4. ULTRA-WIDE FISHEYE DOCK
-           ========================================================================== */
-        #dock-container { position: absolute; bottom: 12px; width: 100%; display: flex; justify-content: center; z-index: 1000000; }
-        #dock {
-            width: 96%; max-width: 1400px; height: var(--dock-h);
-            background: var(--glass-base); backdrop-filter: var(--blur-radius); -webkit-backdrop-filter: var(--blur-radius);
-            border: 1px solid var(--glass-thick); border-radius: var(--radius-dock);
-            padding: 10px 22px; display: flex; align-items: flex-end; gap: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-        }
-        .dock-item { position: relative; width: 56px; height: 56px; display: flex; flex-direction: column; align-items: center; }
-        .dock-svg { width: 100%; height: 100%; cursor: pointer !important; filter: drop-shadow(0 5px 12px rgba(0,0,0,0.2)); transition: transform 0.1s ease; }
-        .dock-dot {
-            position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-            width: 4px; height: 4px; background: #fff; border-radius: 50%; opacity: 0; transition: opacity 0.3s;
-        }
-        .dock-dot.active { opacity: 1; }
-        .dock-item:hover .dock-svg { transform: scale(1.45) translateY(-15px); }
-
-        /* ==========================================================================
-           5. PROCESS CONTROLLED WINDOW SYSTEM
-           ========================================================================== */
-        #window-space { position: absolute; top: var(--menu-h); width: 100%; height: calc(100% - var(--menu-h)); z-index: 10; }
-        
-        .window {
-            position: absolute; width: 850px; height: 580px; border-radius: var(--radius-win);
-            background: rgba(245, 245, 247, 0.88); backdrop-filter: var(--blur-radius);
-            box-shadow: var(--shadow-win); display: none; flex-direction: column; overflow: hidden;
-            transform: scale(0.92) translateY(40px); opacity: 0;
-            transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s ease;
-        }
-        .window.on { display: flex; opacity: 1; transform: scale(1) translateY(0); }
-        .window.dark { background: var(--glass-dark); color: #fff; }
-
-        /* Liquid Chat Master Layer */
-        .window.liquid-win { background: transparent; backdrop-filter: none; box-shadow: none; border: none; }
-        .liquid-shell { position: relative; width: 100%; height: 100%; border-radius: var(--radius-win); overflow: hidden; box-shadow: var(--shadow-win); }
-        #gl-liquid-bg { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-        .liquid-ui-wrap { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; background: rgba(0,0,0,0.48); }
-
-        /* Traffic Light Interface */
-        .title-bar {
-            height: 48px; flex-shrink: 0; display: flex; align-items: center; padding: 0 16px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
-            border-bottom: 0.5px solid rgba(0,0,0,0.1); cursor: grab !important;
-        }
-        .title-bar:active { cursor: grabbing !important; }
-        .lights-wrap { display: flex; gap: 8px; margin-right: 20px; }
-        .l-btn { width: 12px; height: 12px; border-radius: 50%; border: 0.5px solid rgba(0,0,0,0.1); cursor: pointer !important; }
-        .close-l { background: #ff5f57; } .min-l { background: #febc2e; } .max-l { background: #28c840; }
-        .title-text { flex: 1; text-align: center; font-size: 13.5px; font-weight: 600; color: #333; margin-left: -60px; pointer-events: none; }
-        .dark .title-text { color: #ccc; }
-
-        .app-content-box { flex: 1; position: relative; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; background: #fff; }
-        .shield-layer { position: absolute; inset: 0; z-index: 1000; display: none; }
-
-        /* ==========================================================================
-           6. DEEP-LEVEL APPLICATION LOGIC UI
-           ========================================================================== */
-        /* Neural Pathfinding TTT AI */
-        .ttt-box { height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
-        .ttt-grid { display: grid; grid-template-columns: repeat(3, 115px); gap: 10px; }
-        .ttt-cell { width: 115px; height: 115px; background: #1a1a1a; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 55px; font-weight: bold; cursor: pointer !important; transition: background 0.2s; }
-        .ttt-cell:hover { background: #252525; }
-
-        /* Calc */
-        .calc-box { height: 100%; display: flex; flex-direction: column; background: #1e1e1e; }
-        .calc-disp { height: 120px; color: #fff; font-size: 60px; display: flex; align-items: flex-end; justify-content: flex-end; padding: 20px; font-weight: 200; }
-        .calc-matrix { display: grid; grid-template-columns: repeat(4, 1fr); flex: 1; gap: 1px; background: #444; }
-        .calc-btn-unit { background: #666; color: #fff; border: none; font-size: 24px; cursor: pointer !important; }
-        .calc-btn-unit.op { background: #ff9f0a; font-size: 32px; }
-
-        /* System Monitor */
-        .sys-box { padding: 30px; color: #fff; height: 100%; }
-        .sys-row { background: rgba(255,255,255,0.08); border-radius: 14px; padding: 22px; margin-bottom: 22px; }
-        .sys-meter { height: 10px; background: #333; border-radius: 5px; margin-top: 15px; overflow: hidden; }
-        .sys-meter-fill { height: 100%; background: var(--accent-blue); width: 0%; transition: width 0.7s cubic-bezier(0.1, 1, 0.3, 1); }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>macOS Tahoe Infinity ULTRA MAX</title>
+<style>
+:root{
+    --glass: rgba(255,255,255,0.18);
+    --glass-strong: rgba(255,255,255,0.38);
+    --glass-dark: rgba(20,20,25,0.75);
+    --blur: blur(60px) saturate(200%);
+    --radius: 18px;
+    --accent: #007aff;
+    --danger: #ff3b30;
+    --success: #28c840;
+    --warn: #ff9f0a;
+    --menu-h: 32px;
+    --dock-h: 96px;
+    --shadow: 0 40px 120px rgba(0,0,0,.6);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;user-select:none;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+#boot-screen{position:fixed;inset:0;background:black;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;z-index:99999999;transition:opacity 1.2s ease;}
+#boot-logo{font-size:100px;animation:pulse 2s infinite ease-in-out;}
+@keyframes pulse{0%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
+#menu-bar{position:absolute;top:0;width:100%;height:var(--menu-h);backdrop-filter:var(--blur);background:var(--glass);border-bottom:1px solid rgba(255,255,255,0.2);display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-size:13px;color:white;z-index:100000;}
+.menu-left,.menu-right{display:flex;align-items:center;gap:18px;}
+.menu-item{cursor:pointer;}
+.menu-item.bold{font-weight:600;}
+#workspace{position:absolute;top:var(--menu-h);width:100%;height:calc(100% - var(--menu-h));overflow:hidden;}
+.window{position:absolute;width:920px;height:620px;border-radius:var(--radius);background:rgba(255,255,255,0.92);backdrop-filter:var(--blur);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease,opacity .25s ease;}
+.window.dark{background:var(--glass-dark);color:white;}
+.titlebar{height:42px;display:flex;align-items:center;padding:0 15px;cursor:grab;background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));}
+.window.dark .titlebar{background:rgba(255,255,255,0.05);}
+.traffic{display:flex;gap:8px;margin-right:20px;}
+.dot{width:12px;height:12px;border-radius:50%;}
+.red{background:#ff5f57;}
+.yellow{background:#febc2e;}
+.green{background:#28c840;}
+.title{flex:1;text-align:center;font-weight:600;font-size:13px;pointer-events:none;}
+.window-body{flex:1;overflow:auto;}
+#dock-container{position:absolute;bottom:12px;width:100%;display:flex;justify-content:center;z-index:100000;}
+#dock{height:var(--dock-h);padding:12px 25px;backdrop-filter:var(--blur);background:var(--glass);border-radius:30px;display:flex;align-items:flex-end;gap:16px;}
+.dock-icon{width:56px;height:56px;border-radius:18px;background:white;cursor:pointer;transition:all .15s ease;position:relative;}
+.dock-icon:hover{transform:scale(1.45) translateY(-18px);}
+.dock-dot{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:white;opacity:0;}
+.dock-dot.active{opacity:1;}
+#notifications{position:absolute;right:20px;top:60px;width:320px;display:flex;flex-direction:column;gap:15px;z-index:200000;}
+.notification{background:var(--glass-strong);backdrop-filter:var(--blur);padding:16px;border-radius:var(--radius);color:white;animation:slide .4s ease;}
+@keyframes slide{from{transform:translateX(120px);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
 </head>
 <body>
+<div id="boot-screen"><div id="boot-logo"></div><div>Starting macOS Tahoe Infinity ULTRA MAX...</div></div>
+<div id="menu-bar">
+<div class="menu-left"><span class="menu-item bold"></span><span class="menu-item bold" id="active-app">Finder</span><span class="menu-item">File</span><span class="menu-item">Edit</span><span class="menu-item">View</span><span class="menu-item">Go</span><span class="menu-item">Window</span><span class="menu-item">Help</span></div>
+<div class="menu-right"><span>🔋 100%</span><span>📶</span><span id="clock"></span></div>
+</div>
+<div id="workspace"></div>
+<div id="dock-container"><div id="dock"></div></div>
+<div id="notifications"></div>
 
-    <div id="wallpaper-engine">
-        <iframe src="https://www.youtube.com/embed/KT5zTS_BEjQ?autoplay=1&mute=1&loop=1&playlist=KT5zTS_BEjQ&controls=0&modestbranding=1&rel=0&iv_load_policy=3&enablejsapi=1" frameborder="0"></iframe>
-    </div>
-    <div id="desktop-tint"></div>
-
-    <div id="menu-bar">
-        <div class="menu-left">
-            <span class="apple-logo"></span>
-            <span id="active-p-name" style="font-weight:700;">Finder</span>
-            <span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span>
-        </div>
-        <div class="menu-right">
-            <span>🔋 100%</span>
-            <span>📶</span>
-            <span id="os-time">Wed 7:33 PM</span>
-        </div>
-    </div>
-
-    <div id="window-space"></div>
-
-    <div id="dock-container">
-        <div id="dock"></div>
-    </div>
-
-    <script>
-        /**
-         * =========================================
-         * 1. 100% RELIABLE VECTOR SVG ICONSET
-         * =========================================
-         */
-        const OS_SVG = {
-            finder: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#E6F2FF"/><path d="M0 22C0 9 9 0 22 0h28v100H22C9 100 0 91 0 78V22z" fill="#007AFF"/><path d="M30 40c0-4 4-8 8-8s8 4 8 8-4 8-8 8-8-4-8-8zm32 0c0-4 4-8 8-8s8 4 8 8-4 8-8 8-8-4-8-8z" fill="#fff"/><path d="M46 65c5 10 15 10 15 0" stroke="#fff" stroke-width="4" fill="none"/></svg>`,
-            safari: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#fff"/><circle cx="50" cy="50" r="42" fill="#007AFF"/><path d="M42 42l-10 25 25-10 10-25-25 10z" fill="#FF3B30"/><path d="M58 58l-25 10 10-25 25-10-10 25z" fill="#fff"/></svg>`,
-            chat: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#34C759"/><path d="M75 50c0 13-11 24-25 24-4 0-8-1-11-3L20 78l4-16c-3-4-4-8-4-12 0-13 11-24 25-24s25 11 25 24z" fill="#fff"/></svg>`,
-            maps: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#5856D6"/><circle cx="50" cy="50" r="5" fill="#FF3B30"/></svg>`,
-            music: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#FF2D55"/><circle cx="45" cy="70" r="12" fill="#fff"/><path d="M57 70V25l25-5v45" stroke="#fff" stroke-width="6" fill="none"/></svg>`,
-            ttt: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#FF2D55"/><path d="M35 25v50M65 25v50M25 40h50M25 60h50" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>`,
-            calc: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#FF9500"/><rect x="25" y="25" width="50" height="12" rx="4" fill="#fff"/></svg>`,
-            sys: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1C1C1E"/><path d="M20 70l15-20 15 25 15-45 15 30" stroke="#00FF00" stroke-width="4" fill="none"/></svg>`,
-            term: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1C1C1E"/><path d="M25 35l15 15-15 15" stroke="#00FF00" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`,
-            notes: `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#FFF200"/><path d="M20 40h60M20 60h60" stroke="#000" stroke-width="4"/></svg>`
+<script>
+// ===================== CORE ULTRA KERNEL =====================
+class UltraKernel{
+    constructor(){this.processes={};this.z=1;this.registry=[];this.init();}
+    init(){this.initClock();this.initBoot();this.initDock();}
+    initBoot(){setTimeout(()=>{document.getElementById("boot-screen").style.opacity=0;setTimeout(()=>{document.getElementById("boot-screen").remove();this.notify("System Ready","Welcome to macOS Tahoe Infinity");},1200);},3000);}
+    initClock(){setInterval(()=>{document.getElementById("clock").innerText=new Date().toLocaleString();},1000);}
+    notify(title,msg){const box=document.createElement("div");box.className="notification";box.innerHTML="<b>"+title+"</b><br>"+msg;document.getElementById("notifications").appendChild(box);setTimeout(()=>box.remove(),6000);}
+    initDock(){
+        this.registry=[{id:"finder",name:"Finder"},{id:"safari",name:"Safari"},{id:"chat",name:"DeadSimple Chat"},{id:"terminal",name:"Terminal"},{id:"monitor",name:"Activity Monitor"},{id:"notes",name:"Notes"},{id:"appstore",name:"App Store"}];
+        const dock=document.getElementById("dock");
+        this.registry.forEach(app=>{
+            const icon=document.createElement("div");icon.className="dock-icon";icon.onclick=()=>this.launch(app.id);
+            const dot=document.createElement("div");dot.className="dock-dot";dot.id="dot-"+app.id;icon.appendChild(dot);dock.appendChild(icon);
+        });
+    }
+    launch(id){
+        if(this.processes[id]) return this.focus(id);
+        const app=this.registry.find(a=>a.id===id);
+        const win=document.createElement("div");win.className="window";win.style.left=200+Object.keys(this.processes).length*40+"px";win.style.top=120+Object.keys(this.processes).length*40+"px";win.style.zIndex=this.z++;
+        win.innerHTML=`<div class="titlebar"><div class="traffic"><div class="dot red" onclick="OS.close('${id}')"></div><div class="dot yellow" onclick="OS.minimize('${id}')"></div><div class="dot green"></div></div><div class="title">${app.name}</div></div><div class="window-body">${this.renderApp(id)}</div>`;
+        this.enableDrag(win,id);
+        document.getElementById("workspace").appendChild(win);
+        this.processes[id]=win;
+        document.getElementById("dot-"+id).classList.add("active");
+        this.focus(id);this.notify("Launched",app.name+" opened");
+    }
+    renderApp(id){
+        if(id==="chat"){return `<iframe src="https://deadsimplechat.com/J4fFLy4Ek" style="width:100%;height:100%;border:none;"></iframe>`;}
+        return `<div style="padding:30px;">${id} loading...</div>`;
+    }
+    focus(id){this.processes[id].style.zIndex=this.z++;document.getElementById("active-app").innerText=this.registry.find(a=>a.id===id).name;}
+    close(id){const win=this.processes[id];win.remove();delete this.processes[id];document.getElementById("dot-"+id).classList.remove("active");}
+    minimize(id){const win=this.processes[id];win.style.display="none";setTimeout(()=>win.style.display="flex",200);}
+    enableDrag(win,id){
+        const bar=win.querySelector(".titlebar");
+        bar.onmousedown=(e)=>{
+            this.focus(id);
+            const offX=e.clientX-win.offsetLeft;const offY=e.clientY-win.offsetTop;
+            document.onmousemove=(ev)=>{win.style.left=ev.clientX-offX+"px";win.style.top=ev.clientY-offY+"px";};
+            document.onmouseup=()=>document.onmousemove=null;
         };
+    }
+}
+const OS=new UltraKernel();
+</script>
 
-        const CORE_PROCESSES = [
-            { id: 'finder', name: 'Finder', icon: OS_SVG.finder, type: 'iframe', url: 'https://en.wikipedia.org/wiki/MacOS' },
-            { id: 'safari', name: 'Safari', icon: OS_SVG.safari, type: 'iframe', url: 'https://www.bing.com' },
-            { id: 'chat', name: 'Liquid Chat', icon: OS_SVG.chat, type: 'chat', url: 'https://deadsimplechat.com/J4fFLy4Ek' },
-            { id: 'maps', name: 'Maps', icon: OS_SVG.maps, type: 'iframe', url: 'https://www.openstreetmap.org/export/embed.html?bbox=-120.2,38.9,-120.0,39.1&layer=mapnik' },
-            { id: 'music', name: 'Music', icon: OS_SVG.music, type: 'iframe', url: 'https://open.spotify.com/embed/playlist/3' },
-            { id: 'notes', name: 'Notes', icon: OS_SVG.notes, type: 'notes' },
-            { id: 'calc', name: 'Calculator', icon: OS_SVG.calc, type: 'calc' },
-            { id: 'ttt', name: 'TicTacToe AI', icon: OS_SVG.ttt, type: 'ttt' },
-            { id: 'sys', name: 'Monitor', icon: OS_SVG.sys, type: 'sys' },
-            { id: 'term', name: 'Terminal', icon: OS_SVG.term, type: 'term' }
-        ];
+<script>
+// ===================== VIRTUAL FILE SYSTEM =====================
+class VirtualFS{constructor(){this.dbName="TahoeInfinityFS";this.init();}init(){const request=indexedDB.open(this.dbName,1);request.onupgradeneeded=(e)=>{const db=e.target.result;if(!db.objectStoreNames.contains("files")){db.createObjectStore("files",{keyPath:"path"});}};request.onsuccess=(e)=>{this.db=e.target.result;console.log("Filesystem Ready");};}saveFile(path,content){const tx=this.db.transaction("files","readwrite");tx.objectStore("files").put({path,content});}readFile(path,callback){const tx=this.db.transaction("files","readonly");const req=tx.objectStore("files").get(path);req.onsuccess=()=>callback(req.result?.content || "");}listFiles(callback){const tx=this.db.transaction("files","readonly");const store=tx.objectStore("files");const files=[];store.openCursor().onsuccess=(e)=>{const cursor=e.target.result;if(cursor){files.push(cursor.value.path);cursor.continue();} else {callback(files);}};}deleteFile(path){const tx=this.db.transaction("files","readwrite");tx.objectStore("files").delete(path);}
+}
+OS.fs=new VirtualFS();
+</script>
 
-        /**
-         * =========================================
-         * 2. TAHOE HYPER-KERNEL ENGINE
-         * =========================================
-         */
-        class TahoeKernel {
-            constructor() {
-                this.dock = document.getElementById('dock');
-                this.space = document.getElementById('window-space');
-                this.zIndex = 1000;
-                this.processes = {};
-                this.init();
-            }
+<script>
+// ===================== APPS RENDER =====================
+OS.renderAppOriginal=OS.renderApp;
+OS.renderApp=function(id){
+    if(id==="finder"){return `<div style="display:flex;height:100%;"><div style="width:220px;background:rgba(0,0,0,0.05);padding:15px;"><h3>Favorites</h3><div onclick="OS.loadFiles()">Documents</div><div onclick="OS.createFile()">+ New File</div></div><div style="flex:1;padding:20px;" id="finder-files"></div></div>`;}
+    if(id==="notes"){return `<textarea id="notes-area" style="width:100%;height:100%;padding:20px;font-size:16px;"></textarea>`;}
+    if(id==="calc"){return `<div style="padding:30px;"><input id="calc-display" style="width:100%;font-size:40px;text-align:right;"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;">${["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+"].map(b=>`<button onclick="OS.calcPress('${b}')">${b}</button>`).join("")}</div></div>`;}
+    if(id==="chat"){return `<iframe src="https://deadsimplechat.com/J4fFLy4Ek" style="width:100%;height:100%;border:none;"></iframe>`;}
+    return OS.renderAppOriginal(id);
+};
+// Finder & Notes logic
+OS.loadFiles=function(){OS.fs.listFiles(files=>{const container=document.getElementById("finder-files");container.innerHTML="";files.forEach(f=>{const div=document.createElement("div");div.style.padding="8px";div.style.cursor="pointer";div.innerText=f;div.onclick=()=>OS.openFile(f);container.appendChild(div);});});};
+OS.createFile=function(){const name=prompt("Enter file name");if(!name) return;OS.fs.saveFile(name,"");OS.loadFiles();};
+OS.openFile=function(path){OS.fs.readFile(path,(content)=>{OS.launch("notes");setTimeout(()=>{const area=document.getElementById("notes-area");if(area){area.value=content;area.oninput=()=>{OS.fs.saveFile(path,area.value);}}},300);};};
+// Calculator logic
+OS.calcPress=function(val){const disp=document.getElementById("calc-display");if(val==="="){try{disp.value=eval(disp.value);}catch{disp.value="Error";}}else{disp.value+=val;}};
+</script>
 
-            init() {
-                // System Clock Engine
-                setInterval(() => {
-                    const now = new Date();
-                    document.getElementById('os-time').innerText = now.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-                }, 1000);
+<script>
+// ===================== BOOT, LOGIN & FINAL INIT =====================
+OS.showLogin=function(){
+    const overlay=document.createElement("div");overlay.id="loginScreen";overlay.style.position="fixed";overlay.style.inset="0";overlay.style.background="linear-gradient(120deg,#000428,#004e92)";overlay.style.display="flex";overlay.style.flexDirection="column";overlay.style.alignItems="center";overlay.style.justifyContent="center";overlay.style.zIndex="999999999";overlay.style.color="white";overlay.style.fontFamily="sans-serif";
+    overlay.innerHTML=`<h1 style="margin-bottom:40px;">Tahoe OS</h1><div id="userList"></div>`;
+    document.body.appendChild(overlay);
+    const list=document.getElementById("userList");
+    OS.users.forEach(user=>{const btn=document.createElement("div");btn.style.margin="15px";btn.style.padding="20px 40px";btn.style.background="rgba(255,255,255,0.2)";btn.style.borderRadius="20px";btn.style.cursor="pointer";btn.innerText=user.name;btn.onclick=()=>{
+        if(user.password){const p=prompt("Enter password:");if(p!==user.password) return alert("Wrong password");}
+        overlay.remove();OS.notify("Login Successful","Welcome "+user.name);};list.appendChild(btn);});
+};
+window.addEventListener("load",()=>{OS.boot();setTimeout(OS.showLogin,500);});
+</script>
 
-                // Build Ultra-Wide Dock
-                CORE_PROCESSES.forEach(p => {
-                    const el = document.createElement('div');
-                    el.className = 'dock-item';
-                    el.innerHTML = `<div class="dock-svg">${p.icon}</div><div class="dock-dot" id="dot-${p.id}"></div>`;
-                    el.onclick = () => this.launch(p.id);
-                    this.dock.appendChild(el);
-                });
-
-                this.launch('chat'); // Autostart the Chat sandbox
-            }
-
-            launch(id) {
-                const app = CORE_PROCESSES.find(p => p.id === id);
-                if (this.processes[id]) { this.focus(id); return; }
-
-                const win = document.createElement('div');
-                const dark = ['calc', 'term', 'sys', 'ttt'].includes(id) ? 'dark' : '';
-                const liquid = id === 'chat' ? 'liquid-win' : '';
-                
-                win.id = `win-${id}`;
-                win.className = `window ${dark} ${liquid}`;
-                win.style.left = `${160 + (Object.keys(this.processes).length * 45)}px`;
-                win.style.top = `${90 + (Object.keys(this.processes).length * 45)}px`;
-
-                const btns = `<div class="lights-wrap"><div class="l-btn close-l" onclick="os.kill('${id}')"></div><div class="l-btn min-l" onclick="os.minimize('${id}')"></div><div class="l-btn max-l"></div></div>`;
-
-                if (id === 'chat') {
-                    win.innerHTML = `<div class="liquid-shell"><canvas id="gl-liquid-bg"></canvas><div class="liquid-ui-wrap"><div class="title-bar dark" onmousedown="os.startDrag(event, '${id}')">${btns}<div class="title-text">${app.name}</div></div><div class="app-content-box"><div class="shield-layer"></div><iframe src="${app.url}"></iframe></div></div></div>`;
-                } else {
-                    win.innerHTML = `<div class="title-bar" onmousedown="os.startDrag(event, '${id}')">${btns}<div class="title-text">${app.name}</div></div><div class="app-content-box"><div class="shield-layer"></div>${this.getAppBody(app)}</div>`;
-                }
-
-                this.space.appendChild(win);
-                this.processes[id] = win;
-                document.getElementById(`dot-${id}`).classList.add('active');
-
-                setTimeout(() => {
-                    win.classList.add('on');
-                    this.focus(id);
-                    this.bindLogic(id);
-                }, 50);
-            }
-
-            getAppBody(app) {
-                if (app.type === 'iframe') return `<iframe src="${app.url}"></iframe>`;
-                if (app.type === 'calc') return `<div class="calc-box"><div class="calc-disp" id="c-scr">0</div><div class="calc-matrix"><button class="calc-btn-unit">7</button><button class="calc-btn-unit">8</button><button class="calc-btn-unit">9</button><button class="calc-btn-unit op">÷</button><button class="calc-btn-unit">4</button><button class="calc-btn-unit">5</button><button class="calc-btn-unit">6</button><button class="calc-btn-unit op">×</button><button class="calc-btn-unit">1</button><button class="calc-btn-unit">2</button><button class="calc-btn-unit">3</button><button class="calc-btn-unit op">+</button><button class="calc-btn-unit" style="grid-column: span 2">0</button><button class="calc-btn-unit">.</button><button class="calc-btn-unit op">=</button></div></div>`;
-                if (app.type === 'ttt') return `<div class="ttt-box"><h2 id="ttt-h" style="margin-bottom:20px;">Your Turn</h2><div class="ttt-grid" id="ttt-g"></div></div>`;
-                if (app.type === 'term') return `<div class="ttt-box" style="background:#000; font-family:monospace; color:#39ff14; padding:20px; align-items:flex-start; justify-content:flex-start; overflow-y:auto;">Tahoe Terminal Build 7.0<br>root@macbook ~ % <span id="t-in" contenteditable="true" style="outline:none"></span></div>`;
-                if (app.type === 'sys') return `<div class="sys-box"><div class="sys-row"><h3>CPU Utilization</h3><div class="sys-meter"><div class="sys-meter-fill" id="cpu-f"></div></div></div><div class="sys-row"><h3>Physical Memory</h3><div class="sys-meter"><div class="sys-meter-fill" id="ram-f"></div></div></div></div>`;
-                if (app.type === 'notes') return `<textarea style="width:100%;height:100%;border:none;padding:25px;font-size:16px;outline:none;" placeholder="Type notes here..."></textarea>`;
-            }
-
-            bindLogic(id) {
-                if (id === 'chat') this.bootGL();
-                if (id === 'calc') this.bootCalc();
-                if (id === 'ttt') this.bootTTT();
-                if (id === 'sys') this.bootSys();
-                if (id === 'term') this.bootTerm();
-            }
-
-            // NEURAL MINIMAX AI
-            bootTTT() {
-                const g = document.getElementById('ttt-g'), h = document.getElementById('ttt-h');
-                let b = Array(9).fill(null);
-                const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-                const check = (m) => {
-                    for(let w of wins) if(m[w[0]] && m[w[0]] === m[w[1]] && m[w[0]] === m[w[2]]) return m[w[0]];
-                    return m.includes(null) ? null : 'T';
-                };
-                const minimax = (m, d, isM) => {
-                    let r = check(m);
-                    if (r === 'O') return 10; if (r === 'X') return -10; if (r === 'T') return 0;
-                    if (isM) {
-                        let best = -Infinity;
-                        for(let i=0; i<9; i++) if(!m[i]){ m[i]='O'; best=Math.max(best, minimax(m, d+1, false)); m[i]=null; }
-                        return best;
-                    } else {
-                        let best = Infinity;
-                        for(let i=0; i<9; i++) if(!m[i]){ m[i]='X'; best=Math.min(best, minimax(m, d+1, true)); m[i]=null; }
-                        return best;
-                    }
-                };
-                const render = () => {
-                    g.innerHTML = '';
-                    b.forEach((v, i) => {
-                        const c = document.createElement('div');
-                        c.className = 'ttt-cell'; c.innerText = v || '';
-                        c.onclick = () => {
-                            if (v || check(b)) return;
-                            b[i] = 'X';
-                            if (!check(b)) {
-                                let best = -Infinity, move;
-                                for(let j=0; j<9; j++) if(!b[j]){ b[j]='O'; let s=minimax(b,0,false); b[j]=null; if(s>best){best=s;move=j;}}
-                                b[move] = 'O';
-                            }
-                            render();
-                            let result = check(b);
-                            if(result) h.innerText = result === 'T' ? "Draw!" : result + " Wins!";
-                        };
-                        g.appendChild(c);
-                    });
-                };
-                render();
-            }
-
-            bootCalc() {
-                const scr = document.getElementById('c-scr');
-                let str = "";
-                document.querySelectorAll('.calc-btn-unit').forEach(b => {
-                    b.onclick = () => {
-                        const v = b.innerText;
-                        if (v === '=') { try { str = eval(str.replace('×', '*').replace('÷', '/')).toString(); } catch { str = 'Err'; } }
-                        else { str += v; }
-                        scr.innerText = str || '0';
-                    };
-                });
-            }
-
-            bootSys() {
-                setInterval(() => {
-                    const c = document.getElementById('cpu-f'), r = document.getElementById('ram-f');
-                    if(c) c.style.width = Math.random() * 100 + '%';
-                    if(r) r.style.width = (55 + Math.random() * 15) + '%';
-                }, 1300);
-            }
-
-            bootTerm() {
-                const input = document.getElementById('t-in');
-                input.focus();
-                input.onkeydown = (e) => {
-                    if(e.key === 'Enter') {
-                        e.preventDefault();
-                        const cmd = input.innerText;
-                        let out = `<br>${cmd}<br>`;
-                        if(cmd === 'ls') out += "Desktop Documents Downloads Library System";
-                        else if(cmd === 'arch') out += "macOS Tahoe x86_64";
-                        else out.innerHTML += "command not found: " + cmd;
-                        input.parentElement.innerHTML += out + "<br>root@macbook ~ % <span id='t-in' contenteditable='true' style='outline:none'></span>";
-                        document.getElementById('t-in').focus();
-                        this.bootTerm(); 
-                    }
-                };
-            }
-
-            bootGL() {
-                const canvas = document.getElementById('gl-liquid-bg');
-                const gl = canvas.getContext('webgl');
-                canvas.width = 440; canvas.height = 640;
-                gl.viewport(0, 0, canvas.width, canvas.height);
-                const vs = gl.createShader(gl.VERTEX_SHADER);
-                gl.shaderSource(vs, `attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`);
-                gl.compileShader(vs);
-                const fs = gl.createShader(gl.FRAGMENT_SHADER);
-                gl.shaderSource(fs, `precision highp float;uniform vec2 r;uniform float t;void main(){vec2 u=gl_FragCoord.xy/r;float x=t*.25;gl_FragColor=vec4(0.5+0.5*cos(x+u.xyx+vec3(0,2,4)),1.);}`);
-                gl.compileShader(fs);
-                const pg = gl.createProgram(); gl.attachShader(pg, vs); gl.attachShader(pg, fs); gl.linkProgram(pg); gl.useProgram(pg);
-                gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-                const p = gl.getAttribLocation(pg, 'p'); gl.enableVertexAttribArray(p); gl.vertexAttribPointer(p, 2, gl.FLOAT, 0, 0, 0);
-                const start = Date.now();
-                const draw = () => { 
-                    gl.uniform2f(gl.getUniformLocation(pg, 'r'), canvas.width, canvas.height); 
-                    gl.uniform1f(gl.getUniformLocation(pg, 't'), (Date.now()-start)/1000); 
-                    gl.drawArrays(gl.TRIANGLE_STRIP,0,4); requestAnimationFrame(draw); 
-                };
-                draw();
-            }
-
-            focus(id) {
-                this.zIndex++;
-                const win = this.processes[id];
-                win.style.zIndex = this.zIndex;
-                document.getElementById('active-p-name').innerText = CORE_PROCESSES.find(p => p.id === id).name;
-            }
-
-            kill(id) {
-                const win = this.processes[id];
-                win.classList.remove('on');
-                document.getElementById(`dot-${id}`).classList.remove('active');
-                setTimeout(() => { win.remove(); delete this.processes[id]; }, 400);
-            }
-
-            minimize(id) {
-                const win = this.processes[id];
-                win.classList.toggle('on');
-            }
-
-            startDrag(e, id) {
-                const win = this.processes[id];
-                this.focus(id);
-                const offX = e.clientX - win.offsetLeft, offY = e.clientY - win.offsetTop;
-                const shields = document.querySelectorAll('.shield-layer');
-                shields.forEach(s => s.style.display = 'block');
-                const move = (ev) => { win.style.left = `${ev.clientX - offX}px`; win.style.top = `${ev.clientY - offY}px`; };
-                const end = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end); shields.forEach(s => s.style.display = 'none'); };
-                document.addEventListener('mousemove', move);
-                document.addEventListener('mouseup', end);
-            }
-        }
-
-        const os = new TahoeKernel();
-    </script>
 </body>
 </html>
