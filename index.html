@@ -3,722 +3,603 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ice Age Board Game - Masterpiece Edition</title>
+    <title>Ice Age: The Final Masterpiece</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌰</text></svg>">
     
     <style>
         /* ==========================================================================
-           1. STRICT IFRAME LAYOUT & LIQUID RAINBOW BACKGROUND
+           1. CORE ENGINE & LIQUID RAINBOW (60FPS Optimized)
            ========================================================================== */
+        :root {
+            --glass: rgba(15, 20, 30, 0.75);
+            --border: rgba(255, 255, 255, 0.2);
+            --cyan: #00E5FF;
+            --gold: #FFC107;
+            --red: #FF1744;
+            --green: #00E676;
+        }
+
         html, body {
             width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            color: #FFF; position: absolute; inset: 0; box-sizing: border-box; user-select: none;
-            background: linear-gradient(-45deg, #ff003c, #ff8a00, #e52e71, #9c27b0, #00d2ff, #3a7bd5);
-            background-size: 400% 400%; animation: liquidRainbow 15s ease infinite;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%; animation: gradient 15s ease infinite;
+            color: white; position: absolute; inset: 0; box-sizing: border-box; user-select: none;
         }
-        @keyframes liquidRainbow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        * { box-sizing: inherit; }
-        body.sudden-death { background: #3a0000 !important; animation: none; }
+
+        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        * { box-sizing: border-box; outline: none; }
+
+        .glass { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
 
         /* ==========================================================================
-           2. DYNAMIC WEATHER OVERLAYS
+           2. WEATHER & FX LAYER
            ========================================================================== */
-        #weather-layer { position: fixed; inset: 0; pointer-events: none; z-index: 15; transition: opacity 2s ease; opacity: 0; }
-        .weather-snow { background-image: radial-gradient(circle, #FFF 2px, transparent 3px), radial-gradient(circle, #FFF 1px, transparent 2px); background-size: 100px 100px, 60px 60px; background-position: 0 0, 30px 30px; animation: snowAnim 4s linear infinite; opacity: 0.4 !important; }
-        .weather-blizzard { background-image: radial-gradient(circle, rgba(255,255,255,0.8) 3px, transparent 4px); background-size: 50px 50px; animation: blizzardAnim 0.4s linear infinite; opacity: 0.7 !important; }
-        .weather-rain { background-image: linear-gradient(to bottom, transparent 60%, rgba(100,200,255,0.6) 60%); background-size: 10px 40px; animation: rainAnim 0.2s linear infinite; opacity: 0.5 !important; }
-        @keyframes snowAnim { from { background-position: 0 0, 30px 30px; } to { background-position: 100px 100px, 130px 130px; } }
-        @keyframes blizzardAnim { from { background-position: 0 0; } to { background-position: 300px 300px; } }
-        @keyframes rainAnim { from { background-position: 0 0; } to { background-position: -20px 200px; } }
+        #fx-layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 2s; }
+        .weather-snow { background-image: radial-gradient(circle, #FFF 2px, transparent 3px); background-size: 80px 80px; animation: snowMove 5s linear infinite; }
+        .weather-rain { background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2)); background-size: 2px 50px; animation: rainMove 0.3s linear infinite; }
+        @keyframes snowMove { from { background-position: 0 0; } to { background-position: 100px 500px; } }
+        @keyframes rainMove { from { background-position: 0 0; } to { background-position: 0 500px; } }
 
         /* ==========================================================================
-           3. GLASS UI MORPHISM & SETUP SCREEN
+           3. SETUP & PROFANITY UI
            ========================================================================== */
-        .glass-panel {
-            background: rgba(10, 15, 25, 0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-
-        #setup-screen {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 99999; padding: 2vmin; transition: opacity 0.5s ease;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-        }
-        .setup-box { padding: 4vmin; text-align: center; border-radius: 15px; max-width: 600px; width: 100%; border-color: rgba(0, 229, 255, 0.5); }
-        .setup-box h1 { color: #FFF; font-size: clamp(2rem, 6vmin, 4rem); margin: 0 0 1vmin 0; font-weight: 900; text-shadow: 0 0 15px rgba(255,255,255,0.5);}
-        .setup-box h3 { color: #00E5FF; margin: 0 0 3vmin 0; text-shadow: 0 0 10px #00E5FF; }
+        #setup-screen { position: absolute; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); }
+        .setup-card { padding: 40px; border-radius: 20px; width: 90%; max-width: 650px; text-align: center; border: 2px solid var(--cyan); }
+        .setup-card h1 { font-size: 3.5rem; margin: 0; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(255,193,7,0.5); }
         
-        .setup-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 1.5vmin; margin-bottom: 1.5vmin; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); gap: 10px;}
-        .setup-row input, .setup-row select {
-            background: rgba(0,0,0,0.8); color: #FFF; border: 1px solid #00E5FF; padding: 1vmin; 
-            font-size: clamp(1rem, 2vmin, 1.2rem); border-radius: 5px; font-weight: bold; text-align: center; outline: none; transition: 0.2s;
-        }
+        .setup-row { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); gap: 15px; }
+        .setup-row select, .setup-row input { background: #111; color: white; border: 1px solid var(--cyan); padding: 10px; border-radius: 6px; font-weight: bold; font-size: 1rem; }
         .setup-row input { flex: 1; }
-        .setup-row select.emoji-picker { width: 60px; font-size: 1.5rem; padding: 5px; cursor: pointer;}
-        .setup-row input:focus { border-color: #FFC107; box-shadow: 0 0 10px rgba(255,193,7,0.5); }
-        .color-dot { width: 4vmin; height: 4vmin; border-radius: 50%; border: 2px solid #FFF; flex-shrink: 0;}
-        #setup-error { color: #FFF; font-weight: bold; margin-bottom: 15px; display: none; background: rgba(255, 23, 68, 0.8); padding: 10px; border-radius: 5px; border: 1px solid #FF1744;}
+        
+        #error-msg { background: var(--red); color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: none; font-weight: bold; font-size: 0.9rem; }
 
         /* ==========================================================================
-           4. MASTER GAME LAYOUT
+           4. GAME LAYOUT & PROCEDURAL BOARD
            ========================================================================== */
-        #game-container { display: none; width: 100%; height: 100%; padding: 1vmin; gap: 1vmin; }
-        @media (min-aspect-ratio: 1/1) {
-            #game-container { flex-direction: row; }
-            #left-col { flex: 1; display: flex; align-items: center; justify-content: center; }
-            #right-col { width: 450px; display: flex; flex-direction: column; gap: 1vmin; }
-        }
-        @media (max-aspect-ratio: 1/1) {
-            #game-container { flex-direction: column; }
-            #left-col { flex: 0 0 55%; display: flex; align-items: center; justify-content: center; }
-            #right-col { flex: 1; display: flex; flex-direction: column; gap: 1vmin; }
-        }
+        #game-container { display: none; width: 100%; height: 100%; padding: 1.5vmin; gap: 1.5vmin; }
+        #left-col { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        #right-col { width: 420px; display: flex; flex-direction: column; gap: 1.5vmin; z-index: 10; }
+
+        #board-wrapper { position: relative; width: 100%; height: 100%; max-width: 92vh; max-height: 92vw; aspect-ratio: 1/1; }
+        #board { display: grid; width: 100%; height: 100%; border-radius: 15px; position: relative; gap: 3px; padding: 5px; }
+
+        #center-island { grid-column: 2 / -2; grid-row: 2 / -2; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; border-radius: 10px; overflow: hidden; z-index: 1; border: 2px solid var(--border); }
+        .biome { background-size: cover; background-position: center; position: relative; }
+        .biome::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.2); }
+        .b-grass { background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600'); }
+        .b-peaks { background-image: url('https://images.unsplash.com/photo-1517823382935-51bfcb0ec6bc?w=600'); }
+        .b-village { background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600'); }
+        .b-tundra { background-image: url('https://images.unsplash.com/photo-1478265409131-1f65c88f965c?w=600'); }
+
+        .space { background: rgba(255, 255, 255, 0.95); border: 1px solid #000; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 0.65rem; font-weight: 900; position: relative; border-radius: 5px; z-index: 10; transition: transform 0.2s; text-transform: uppercase; }
+        .s-start { background: var(--gold) !important; color: #000; font-size: 0.8rem; }
+        .s-event { color: var(--red); font-size: 0.9rem; }
+        .s-jaap { background: var(--red) !important; color: #FFF; border-radius: 50%; }
+        .s-market { background: #D500F9 !important; color: #FFF; }
+        .s-cave { background: var(--cyan) !important; color: #000; }
+        .s-jackpot { background: var(--green) !important; color: #000; }
+        .s-team { background: #FF9800 !important; color: #FFF; border: 2px solid #FFF; }
+        .s-secret { background: #607D8B !important; color: #FFF; }
+
+        .token-container { position: absolute; bottom: 2px; display: flex; flex-wrap: wrap; justify-content: center; width: 100%; z-index: 50; pointer-events: none; }
+        .token { width: clamp(22px, 4vmin, 35px); height: clamp(22px, 4vmin, 35px); border-radius: 50%; border: 3px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         /* ==========================================================================
-           5. THE BOARD & BIOME IMAGES
+           5. UI PANELS
            ========================================================================== */
-        #board-wrapper { position: relative; width: 100%; height: 100%; max-width: 100vh; max-height: 100vw; aspect-ratio: 1/1; }
-        #board { display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); gap: 2px; width: 100%; height: 100%; border-radius: 10px; position: relative; }
+        #hud { display: flex; flex-direction: column; gap: 10px; height: 45%; overflow-y: auto; padding-right: 5px; }
+        .player-card { padding: 12px; border-radius: 12px; border-left: 6px solid; transition: 0.3s; background: rgba(0,0,0,0.3); }
+        .player-card.active { background: rgba(255,255,255,0.15); border-left-width: 12px; transform: translateX(5px); }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-top: 5px; background: #000; }
 
-        #center-island { grid-column: 2 / 10; grid-row: 2 / 10; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; border-radius: 8px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); z-index: 1; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
-        .biome { display: flex; align-items: center; justify-content: center; font-size: clamp(1rem, 3vmin, 2.5rem); font-weight: 900; color: #FFF; text-shadow: 2px 2px 5px #000, 0 0 15px #000; text-transform: uppercase; background-size: cover; background-position: center; padding: 10px; text-align: center; border: 1px solid rgba(0,0,0,0.5); }
-        .b-grass { background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80'); }
-        .b-peaks { background-image: url('https://images.unsplash.com/photo-1517823382935-51bfcb0ec6bc?auto=format&fit=crop&w=800&q=80'); }
-        .b-village { background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80'); }
-        .b-tundra { background-image: url('https://images.unsplash.com/photo-1478265409131-1f65c88f965c?auto=format&fit=crop&w=800&q=80'); }
+        #controls { height: 55%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        #log { flex: 1; width: 100%; background: rgba(0,0,0,0.7); border-radius: 12px; margin-top: 10px; padding: 15px; font-family: 'Courier New', monospace; font-size: 0.85rem; overflow-y: auto; border: 1px solid var(--border); }
+        .log-entry { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 3px 0; color: #CCC; }
+        .log-entry b { color: var(--cyan); }
 
-        .space { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.8); color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: clamp(0.5rem, 1.8vmin, 1rem); font-weight: 900; position: relative; border-radius: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.3); z-index: 10; }
-        
-        .s-start { background: rgba(255, 193, 7, 0.9); font-size: clamp(0.7rem, 2vmin, 1.2rem); }
-        .s-jaap { background: rgba(255, 23, 68, 0.9); color: #FFF; border-radius: 50%; aspect-ratio: 1/1;}
-        .s-event { color: #FF1744; font-size: clamp(0.8rem, 2.5vmin, 1.3rem); }
-        .s-market { background: rgba(213, 0, 249, 0.9); color: #FFF; }
-        .s-cave { background: rgba(0, 229, 255, 0.9); color: #000; }
-        .s-jackpot { background: rgba(0, 230, 118, 0.9); color: #000; }
-        .s-team { background: #FF9800; color: #FFF; font-size: clamp(0.7rem, 2vmin, 1rem); box-shadow: 0 0 10px #FF9800; border: 2px solid #FFF;}
-        .s-secret { background: #607D8B; color: #FFF; }
-
-        .token-container { position: absolute; bottom: 2px; display: flex; flex-wrap: wrap; justify-content: center; width: 100%; gap: 1px; z-index: 20;}
-        .token { width: clamp(20px, 4.5vmin, 35px); height: clamp(20px, 4.5vmin, 35px); border-radius: 50%; border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: clamp(0.9rem, 2.5vmin, 1.5rem); box-shadow: 0 4px 10px rgba(0,0,0,0.9); transition: transform 0.15s linear; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);}
+        .btn { background: var(--gold); border: none; padding: 15px; font-size: 1.5rem; font-weight: 900; border-radius: 12px; cursor: pointer; width: 100%; color: #000; transition: 0.2s; box-shadow: 0 4px 0 #b38600; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b38600; }
+        .btn:disabled { background: #555; box-shadow: none; transform: none; color: #888; cursor: not-allowed; }
+        .btn-cyan { background: var(--cyan); box-shadow: 0 4px 0 #00acc1; }
 
         /* ==========================================================================
-           6. UI PANELS
+           6. MODALS & DICE
            ========================================================================== */
-        .panel { padding: 1.5vmin; border-radius: 12px; z-index: 20; position: relative; }
-        #hud { display: flex; flex-wrap: wrap; gap: 1vmin; height: 45%; overflow-y: auto; align-content: flex-start;}
-        .player-card { flex: 1; min-width: 45%; background: rgba(0,0,0,0.4); border-top: 4px solid; padding: 1vmin; text-align: center; border-radius: 8px; position: relative; }
-        .player-card.active { border: 2px solid #FFC107; border-top: 4px solid #FFC107; background: rgba(255,193,7,0.2); box-shadow: 0 0 15px rgba(255,193,7,0.3);}
-        .ally-badge, .upgrade-badge, .team-badge { background: rgba(0,0,0,0.8); font-size: clamp(0.5rem, 1.2vmin, 0.8rem); padding: 2px 4px; border-radius: 4px; margin-top: 3px; display: inline-block;}
-        .ally-badge { color: #00E5FF; } .upgrade-badge { color: #FF9800; } .team-badge { background: #FF1744; color: #FFF; font-weight: bold;}
-        
-        #controls { height: 55%; display: flex; flex-direction: column; align-items: center; }
-        #turn-indicator { margin: 0 0 1vmin 0; font-size: clamp(1.5rem, 3.5vmin, 2rem); font-weight: bold; text-align: center; text-shadow: 0 0 10px rgba(0,0,0,0.8);}
-        
-        #log { flex: 1; width: 100%; background: rgba(0,0,0,0.6); color: #FFF; font-family: monospace; overflow-y: auto; padding: 1.5vmin; border-radius: 8px; margin-top: 1vmin; font-size: clamp(0.7rem, 1.8vmin, 1rem); border: 1px solid rgba(255,255,255,0.1); }
-        .log-entry { border-bottom: 1px dotted rgba(255,255,255,0.2); padding: 4px 0; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 5000; }
+        .modal-content { width: 90%; max-width: 550px; padding: 30px; border-radius: 20px; text-align: center; border: 2px solid var(--cyan); }
+        .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .market-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--border); transition: 0.2s; }
+        .market-item:hover { border-color: var(--gold); background: rgba(255,255,255,0.1); }
 
-        .btn { background: #FFC107; border: 2px solid #FFF; padding: 1.5vmin; font-size: clamp(1.2rem, 3vmin, 1.8rem); font-weight: 900; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 1vmin; text-transform: uppercase; color: #000; transition: 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .btn:active { transform: scale(0.95); }
-        .btn:disabled { background: rgba(85,85,85,0.8); cursor: not-allowed; color: #CCC; border-color: #555; transform: none; box-shadow: none;}
-        .btn-cyan { background: #00E5FF; color: #000; }
-        .btn-small { padding: 1vmin; font-size: clamp(0.8rem, 2vmin, 1.2rem); margin: 0;}
+        #dice-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 4000; }
+        .dice-box { width: 120px; height: 120px; background: #FFF; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 70px; color: #000; animation: shake 0.4s infinite; border: 5px solid #000; }
+        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } }
 
-        /* ==========================================================================
-           7. CUSTOM MARKET MODAL & POPUPS
-           ========================================================================== */
-        #market-modal, #simple-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 99999; padding: 2vmin; overflow-y: auto;}
-        
-        .modal-content { padding: 4vmin; text-align: center; border-radius: 15px; max-width: 600px; width: 100%; border-color: rgba(0,229,255,0.5); margin: auto;}
-        .modal-content h2 { color: #FFC107; font-size: clamp(1.8rem, 4.5vmin, 3rem); margin: 0 0 2vmin 0; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,193,7,0.5);}
-        .modal-content p { font-size: clamp(1rem, 2.5vmin, 1.3rem); margin-bottom: 3vmin; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
-        #modal-btn-container { display: flex; gap: 1vmin; justify-content: center; flex-wrap: wrap; }
-
-        .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5vmin; margin-bottom: 3vmin; text-align: left;}
-        @media (max-width: 500px) { .market-grid { grid-template-columns: 1fr; } }
-        .market-item { background: rgba(0,0,0,0.6); border: 1px solid #00E5FF; padding: 1.5vmin; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between;}
-        .market-item h4 { margin: 0 0 5px 0; color: #00E5FF; font-size: 1.1rem;}
-        .market-item p { font-size: 0.9rem !important; margin: 0 0 10px 0 !important; color: #DDD;}
-        .market-cost { font-weight: bold; color: #FFC107; font-size: 1.2rem; text-align: center; margin-bottom: 10px;}
-
-        #dice-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 90000; }
-        .dice-box { width: 100px; height: 100px; background: rgba(255,255,255,0.9); border: 5px solid #000; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 60px; font-weight: bold; color: #000; animation: shake 0.5s infinite; box-shadow: 0 0 40px rgba(255,193,7,0.8);}
-        @keyframes shake { 0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(15deg) scale(1.1); } 50% { transform: rotate(0deg) scale(1); } 75% { transform: rotate(-15deg) scale(1.1); } 100% { transform: rotate(0deg) scale(1); } }
-        
-        .float-text { position: absolute; font-size: 28px; font-weight: bold; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 100; text-shadow: 2px 2px 0 #000, 0 0 10px rgba(0,0,0,0.8); }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(1.5); } }
+        .float-text { position: absolute; font-weight: 900; font-size: 2rem; pointer-events: none; z-index: 500; animation: floatUp 1s forwards; text-shadow: 2px 2px #000; }
+        @keyframes floatUp { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-100px) scale(1.5); } }
     </style>
 </head>
 <body>
 
-    <div id="weather-layer"></div>
+    <div id="fx-layer"></div>
     <div id="dice-overlay"><div class="dice-box" id="dice-face">🎲</div></div>
 
     <div id="setup-screen">
-        <div class="setup-box glass-panel">
-            <h1>ICE AGE</h1>
-            <h3>THE BOARD GAME</h3>
-            <div id="setup-error"></div>
+        <div class="setup-card glass">
+            <h1>ICE AGE: FINALE</h1>
+            <div id="error-msg"></div>
             
             <div class="setup-row">
-                <span style="font-weight: bold; font-size: 1.2rem;">Players:</span>
+                <span>BOARD CONFIGURATION:</span>
+                <select id="board-size">
+                    <option value="20">Sprinting (20 Spaces)</option>
+                    <option value="36" selected>Classic (36 Spaces)</option>
+                    <option value="60">Marathon (60 Spaces)</option>
+                </select>
+            </div>
+
+            <div class="setup-row">
+                <span>PLAYER COUNT:</span>
                 <select id="player-count">
-                    <option value="2">2 Explorers</option>
-                    <option value="3">3 Explorers</option>
-                    <option value="4" selected>4 Explorers</option>
+                    <option value="2">2 Players</option>
+                    <option value="3">3 Players</option>
+                    <option value="4" selected>4 Players</option>
                 </select>
             </div>
             
             <div id="player-inputs"></div>
-            <button id="btn-start" class="btn btn-cyan" style="margin-top: 20px;">Deploy Explorers</button>
+            <button id="btn-start" class="btn btn-cyan" style="margin-top: 20px;">INITIALIZE GAME</button>
         </div>
     </div>
 
     <div id="game-container">
         <div id="left-col">
             <div id="board-wrapper">
-                <div id="board" class="glass-panel" style="padding: 4px;">
+                <div id="board" class="glass">
                     <div id="center-island">
-                        <div class="biome b-grass">Grassy Plains</div>
-                        <div class="biome b-peaks">Frozen Peaks</div>
-                        <div class="biome b-village">Ancient Village</div>
-                        <div class="biome b-tundra">Snowy Tundra</div>
+                        <div class="biome b-grass"></div>
+                        <div class="biome b-peaks"></div>
+                        <div class="biome b-village"></div>
+                        <div class="biome b-tundra"></div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="right-col">
-            <div id="hud" class="panel glass-panel"></div>
-            
-            <div id="controls" class="panel glass-panel">
-                <div id="turn-indicator">Game Start</div>
-                <div style="font-size: clamp(0.9rem, 2vmin, 1.2rem); margin-bottom: 1vmin; color: rgba(255,255,255,0.8); font-weight: bold;">
-                    Turn <span id="turn-counter">1</span>/40 | Jackpot: <span id="jackpot-counter" style="color:#00E676; font-weight:bold; text-shadow: 0 0 5px #00E676;">0 🌰</span>
+            <div id="hud" class="panel glass"></div>
+            <div id="controls" class="panel glass">
+                <div id="turn-indicator" style="font-size: 2rem; font-weight: 900; text-transform: uppercase;"></div>
+                <div style="margin: 5px 0; font-weight: bold; color: var(--gold);">
+                    TURN: <span id="turn-counter">1</span> | JACKPOT: <span id="jackpot-counter">0</span> 🌰
                 </div>
-                <button id="btn-roll" class="btn">ROLL 🎲</button>
+                <button id="btn-roll" class="btn">ROLL DICE 🎲</button>
                 <div id="log"></div>
             </div>
         </div>
     </div>
 
-    <div id="simple-modal">
-        <div class="modal-content glass-panel">
-            <h2 id="sm-title">Title</h2>
-            <p id="sm-text">Description</p>
+    <div id="simple-modal" class="modal-overlay">
+        <div class="modal-content glass">
+            <h2 id="sm-title" style="color: var(--gold);"></h2>
+            <p id="sm-text" style="font-size: 1.2rem;"></p>
             <div id="modal-btn-container"></div>
         </div>
     </div>
 
-    <div id="market-modal">
-        <div class="modal-content glass-panel" style="max-width: 800px;">
-            <h2 style="color: #D500F9; text-shadow: 0 0 10px rgba(213,0,249,0.5);">VILLAGE MARKET</h2>
-            <p style="color: #FFC107; font-weight: bold;" id="market-wallet">Your Wallet: 0 🌰</p>
-            <div class="market-grid" id="market-items-container"></div>
-            <button class="btn" style="background:#555; color:#FFF; border-color:#888;" onclick="closeMarket()">LEAVE MARKET</button>
+    <div id="market-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 700px;">
+            <h2 style="color: var(--cyan); font-size: 2.5rem;">VILLAGE OUTPOST</h2>
+            <p id="market-wallet" style="font-weight: bold; color: var(--gold);"></p>
+            <div class="market-grid" id="market-items"></div>
+            <button class="btn" style="background: #444; color: #FFF; box-shadow: none;" onclick="closeMarket()">EXIT STORE</button>
         </div>
     </div>
 
 <script>
     /* =========================================================================
-       1. PROFANITY FILTER & EMOJI SETUP
+       1. MILITARY-GRADE ENGINE CONFIG
        ========================================================================= */
     const colors = ['#F44336', '#4CAF50', '#2196F3', '#FFEB3B'];
-    const emojis = ['🦖', '🦣', '🐧', '🐺', '🧊', '🏔️', '🐻‍❄️', '🏹'];
-    
+    const emojis = ['🦖', '🦣', '🐧', '🐺', '🧊', '🏔️', '🏹', '🐻‍❄️'];
     const severeWords = ['fuck', 'shit', 'bitch', 'nigg', 'cunt', 'whore', 'slut', 'fag', 'dick', 'pussy', 'cock', 'blowjob', 'dildo', 'masturbat', 'rape', 'incest', 'bollock', 'smegma', 'tosser'];
     const exactWords = ['anal', 'anus', 'arse', 'ass', 'ballsack', 'balls', 'bastard', 'boob', 'bugger', 'bum', 'butt', 'buttplug', 'clitoris', 'crap', 'cum', 'damn', 'dyke', 'feck', 'fellate', 'fellatio', 'felching', 'flange', 'hell', 'homo', 'jerk', 'jizz', 'knob', 'labia', 'lmao', 'lmfao', 'muff', 'omg', 'penis', 'piss', 'poop', 'prick', 'pube', 'queer', 'scrotum', 'sex', 'spunk', 'tit', 'turd', 'twat', 'vagina', 'wank', 'wtf'];
 
-    function isNameClean(name) {
-        let normal = name.toLowerCase();
-        for (let w of exactWords) { let regex = new RegExp(`\\b${w}\\b`, 'i'); if (regex.test(normal)) return false; }
-        let stripped = normal.replace(/[^a-z0-9]/gi, '').replace(/1/g, 'i').replace(/0/g, 'o').replace(/@/g, 'a').replace(/\$/g, 's').replace(/5/g, 's').replace(/3/g, 'e').replace(/4/g, 'a').replace(/7/g, 't');
-        for (let w of severeWords) { if (stripped.includes(w)) return false; }
+    let state = {
+        players: [],
+        turn: 0,
+        totalTurns: 1,
+        jackpot: 0,
+        boardSize: 36,
+        gridSide: 10,
+        spaceActions: [],
+        isAnimating: false
+    };
+
+    function isClean(name) {
+        let n = name.toLowerCase();
+        for (let w of exactWords) { if (new RegExp(`\\b${w}\\b`, 'i').test(n)) return false; }
+        let s = n.replace(/[^a-z0-9]/gi, '').replace(/1/g, 'i').replace(/0/g, 'o').replace(/3/g, 'e').replace(/5/g, 's').replace(/4/g, 'a').replace(/7/g, 't');
+        for (let w of severeWords) { if (s.includes(w)) return false; }
         return true;
     }
 
+    /* =========================================================================
+       2. SETUP LOGIC
+       ========================================================================= */
     const countSelect = document.getElementById('player-count');
-    const inputsContainer = document.getElementById('player-inputs');
+    const inputs = document.getElementById('player-inputs');
 
-    function renderInputs() {
-        inputsContainer.innerHTML = '';
+    function renderSetup() {
+        inputs.innerHTML = '';
         let count = parseInt(countSelect.value);
-        let emojiOptions = emojis.map(e => `<option value="${e}">${e}</option>`).join('');
-
         for (let i = 0; i < count; i++) {
-            inputsContainer.innerHTML += `
+            inputs.innerHTML += `
                 <div class="setup-row">
-                    <div class="color-dot" style="background:${colors[i]}"></div>
-                    <input type="text" id="p${i}-name" value="Player ${i+1}" maxlength="12">
-                    <select id="p${i}-emoji" class="emoji-picker">${emojiOptions}</select>
-                </div>
-            `;
-            document.getElementById(`p${i}-emoji`).selectedIndex = i % emojis.length;
+                    <div style="width:20px; height:20px; border-radius:50%; background:${colors[i]}"></div>
+                    <input type="text" id="p${i}-name" placeholder="Name" value="Player ${i+1}" maxlength="10">
+                    <select id="p${i}-emoji">${emojis.map(e => `<option>${e}</option>`).join('')}</select>
+                </div>`;
         }
     }
-    countSelect.addEventListener('change', renderInputs);
-    renderInputs();
+    countSelect.addEventListener('change', renderSetup);
+    renderSetup();
 
     document.getElementById('btn-start').addEventListener('click', () => {
         let count = parseInt(countSelect.value);
-        let errorDiv = document.getElementById('setup-error');
-        errorDiv.style.display = 'none';
-        let tempPlayers = [];
+        state.boardSize = parseInt(document.getElementById('board-size').value);
+        state.gridSide = (state.boardSize / 4) + 1;
+        
+        let err = document.getElementById('error-msg');
+        err.style.display = 'none';
 
         for (let i = 0; i < count; i++) {
-            let nameVal = document.getElementById(`p${i}-name`).value.trim();
-            let emojiVal = document.getElementById(`p${i}-emoji`).value;
-            if (nameVal === "") { errorDiv.innerText = "Error: Names cannot be blank."; errorDiv.style.display = 'block'; return; }
-            if (!isNameClean(nameVal)) { errorDiv.innerText = `Error: Prohibited language detected in "${nameVal}".`; errorDiv.style.display = 'block'; return; }
-            tempPlayers.push({
-                id: i, name: nameVal, color: colors[i], emoji: emojiVal,
+            let n = document.getElementById(`p${i}-name`).value.trim();
+            if (!n || !isClean(n)) { err.innerText = "NAME REJECTED: Profanity or empty."; err.style.display = "block"; return; }
+            state.players.push({
+                id: i, name: n, color: colors[i], emoji: document.getElementById(`p${i}-emoji`).value,
                 pos: 0, acorns: 4, laps: 0, skip: false, ally: null, upgrades: [], team: null
             });
         }
-
-        state.players = tempPlayers;
-        document.getElementById('setup-screen').style.opacity = '0';
-        setTimeout(() => { document.getElementById('setup-screen').style.display = 'none'; document.getElementById('game-container').style.display = 'flex'; initGame(); }, 500);
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('game-container').style.display = 'flex';
+        initProceduralBoard();
     });
 
     /* =========================================================================
-       2. GAME DATA, ITEMS & THE HARSHER MAP
+       3. BOARD GENERATION & ANIMATION QUEUE
        ========================================================================= */
-    const gridMap = [
-        {c:1, r:1}, {c:2, r:1}, {c:3, r:1}, {c:4, r:1}, {c:5, r:1}, {c:6, r:1}, {c:7, r:1}, {c:8, r:1}, {c:9, r:1}, {c:10, r:1}, 
-        {c:10, r:2}, {c:10, r:3}, {c:10, r:4}, {c:10, r:5}, {c:10, r:6}, {c:10, r:7}, {c:10, r:8}, {c:10, r:9}, 
-        {c:10, r:10}, {c:9, r:10}, {c:8, r:10}, {c:7, r:10}, {c:6, r:10}, {c:5, r:10}, {c:4, r:10}, {c:3, r:10}, {c:2, r:10}, {c:1, r:10}, 
-        {c:1, r:9}, {c:1, r:8}, {c:1, r:7}, {c:1, r:6}, {c:1, r:5}, {c:1, r:4}, {c:1, r:3}, {c:1, r:2} 
-    ];
-
-    const Events = [
-        { desc: "Glacier Collapse! Everyone loses 1 🌰 to the Jackpot.", f: (p) => { state.players.forEach(pl => loseAcorns(pl, 1, true)); } },
-        { desc: "Golden Find! Collect 2 🌰.", f: (p) => gainAcorns(p, 2) },
-        { desc: "Avalanche! Move back 3 spaces.", f: (p) => moveTokenStepByStep(p, -3, false) }, 
-        { desc: "Ice Slide! Move straight to the next Free Space.", f: (p) => jumpTo(p, "Free space") },
-        { desc: "Lost in the Tundra. Go back to Start.", f: (p) => teleport(p, 0) },
-        { desc: "Ancient Tree! Collect 4 🌰.", f: (p) => gainAcorns(p, 4) },
-        { desc: "Thief! Steal 1 🌰 from the player with the most acorns.", f: (p) => stealFromRichest(p) }
-    ];
-
-    const MarketInventory = {
-        allies: [
-            { name: "Mammoth", effect: "Ignores Jaap Skips", cost: 3 },
-            { name: "Caveman", effect: "+1 to all Dice Rolls", cost: 3 },
-            { name: "Squirrel", effect: "Gains +1 🌰 on Free Spaces", cost: 3 }
-        ],
-        upgrades: [
-            { name: "Snow Tires", effect: "Immune to moving backwards", cost: 4 },
-            { name: "Turbo Engine", effect: "+2 to all Dice Rolls", cost: 5 }
-        ]
-    };
-
-    // The Gauntlet Update: Removed "+3 Spaces", swapped boring Free Spaces for traps.
-    const SpaceData = [
-        { t: "START", class: "s-start" }, 
-        { t: "+1 🌰", action: (p) => gainAcorns(p, 1) }, 
-        { t: "EVENT", class: "s-event", action: (p) => triggerEvent(p) },
-        { t: "Market", class: "s-market", action: (p) => openMarketMenu(p) }, 
-        { t: "Go Start", action: (p) => teleport(p, 0) }, 
-        { t: "Ice Cave", class: "s-cave", action: (p) => triggerIceCave(p) }, 
-        { t: "EVENT", class: "s-event", action: (p) => triggerEvent(p) }, 
-        { t: "Bear Trap", class: "s-jaap", action: (p) => { loseAcorns(p, 1, true); return triggerJaap(p); } }, // Was +3 Spaces
-        { t: "Jaap STOP", class: "s-jaap", action: (p) => triggerJaap(p) }, 
-        { t: "Secret Path", class: "s-secret", action: (p) => triggerShortcut(p) }, 
-        { t: "EVENT", class: "s-event", action: (p) => triggerEvent(p) }, 
-        { t: "Jaap (+2🌰)", action: (p) => { gainAcorns(p, 2); jumpTo(p, "Jaap STOP"); return true; } }, 
-        { t: "JACKPOT", class: "s-jackpot", action: (p) => claimJackpot(p) }, 
-        { t: "EVENT", class: "s-event", action: (p) => triggerEvent(p) }, 
-        { t: "+1 🌰", action: (p) => gainAcorns(p, 1) }, 
-        { t: "EVENT", class: "s-event", action: (p) => triggerEvent(p) }, 
-        { t: "Jaap STOP", class: "s-jaap", action: (p) => triggerJaap(p) }, 
-        { t: "TEAM PACT", class: "s-team", action: (p) => triggerTeamMode(p) }, 
-        { t: "Avalanche", class: "s-event", action: (p) => moveTokenStepByStep(p, -3, true) }, // Was Free Space
-        { t: "Bridge" }, 
-        { t: "Toll Bridge", action: (p) => { showMsg("TOLL BRIDGE", "Pay the toll! Lose 1 🌰.", () => { loseAcorns(p, 1, true); passTurn(); }); return true; } }, // Was Free Space
-        { t: "-4 Spaces", action: (p) => moveTokenStepByStep(p, -4, true) }, 
-        { t: "-2 🌰", action: (p) => loseAcorns(p, 2, true) }, 
-        { t: "Jaap STOP", class: "s-jaap", action: (p) => triggerJaap(p) }, 
-        { t: "-8 Spaces", action: (p) => moveTokenStepByStep(p, -8, true) }, 
-        { t: "EVENT", class: "s-event", action: (p) => triggerEvent(p) },
-        { t: "+1 🌰", action: (p) => gainAcorns(p, 1) }, 
-        { t: "End", class: "s-jaap" },
-        { t: "Bear Trap", class: "s-jaap", action: (p) => { loseAcorns(p, 1, true); return triggerJaap(p); } }, // Was Free Space
-        { t: "+1 🌰", action: (p) => gainAcorns(p, 1) }, 
-        { t: "EVENT", class: "s-event", action: (p) => triggerEvent(p) },
-        { t: "Jaap STOP", class: "s-jaap", action: (p) => triggerJaap(p) },
-        { t: "Ice Cave", class: "s-cave", action: (p) => triggerIceCave(p) }, 
-        { t: "Market", class: "s-market", action: (p) => openMarketMenu(p) }, 
-        { t: "Blizzard", class: "s-event", action: (p) => moveTokenStepByStep(p, -2, true) }, // Was Free Space
-        { t: "+2 🌰", action: (p) => gainAcorns(p, 2) }
-    ];
-
-    /* =========================================================================
-       3. GAME STATE & WEATHER
-       ========================================================================= */
-    let state = { players: [], turn: 0, totalTurns: 1, suddenDeath: false, jackpot: 0 };
-    const weatherConditions = ['clear', 'snow', 'blizzard', 'rain'];
-
-    function initGame() {
+    function initProceduralBoard() {
         const board = document.getElementById('board');
-        for (let i = 0; i < 36; i++) {
-            let sp = SpaceData[i] || { t: "Free space" }; 
-            let div = document.createElement('div');
-            div.className = `space ${sp.class || ''}`; div.id = `space-${i}`;
-            div.style.gridColumn = gridMap[i].c; div.style.gridRow = gridMap[i].r;
-            div.innerHTML = `<span>${sp.t}</span><div id="tc-${i}" class="token-container"></div>`;
-            board.appendChild(div);
-        }
-        state.players.forEach(p => drawToken(p)); updateHUD(); startTurn();
-    }
+        board.style.gridTemplateColumns = `repeat(${state.gridSide}, 1fr)`;
+        board.style.gridTemplateRows = `repeat(${state.gridSide}, 1fr)`;
 
-    function triggerRandomWeather() {
-        let newWeather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
-        let layer = document.getElementById('weather-layer');
-        if (newWeather === 'clear') {
-            layer.style.opacity = '0'; setTimeout(() => layer.className = '', 2000); log(`☀️ The weather cleared.`);
-        } else {
-            layer.className = `weather-${newWeather}`; layer.style.opacity = '1'; log(`☁️ WEATHER: ${newWeather.toUpperCase()}!`);
-        }
+        let perimeter = [];
+        let c=1, r=1;
+        for(c=1; c<=state.gridSide; c++) perimeter.push({c,r});
+        c=state.gridSide; for(r=2; r<=state.gridSide; r++) perimeter.push({c,r});
+        r=state.gridSide; for(c=state.gridSide-1; c>=1; c--) perimeter.push({c,r});
+        c=1; for(r=state.gridSide-1; r>=2; r--) perimeter.push({c,r});
+
+        const types = ["+1 🌰", "+2 🌰", "EVENT", "EVENT", "Market", "Ice Cave", "Jaap STOP", "JACKPOT", "Bear Trap", "TEAM PACT", "Secret Path", "Toll Bridge"];
+        
+        perimeter.forEach((pos, i) => {
+            let type = (i === 0) ? "START" : types[Math.floor(Math.random() * types.length)];
+            let div = document.createElement('div');
+            div.className = `space s-${type.toLowerCase().replace(/ /g, '')}`;
+            div.style.gridColumn = pos.c; div.style.gridRow = pos.r;
+            div.innerHTML = `<span>${type}</span><div id="tc-${i}" class="token-container"></div>`;
+            board.appendChild(div);
+            state.spaceActions[i] = type;
+        });
+
+        state.players.forEach(p => drawToken(p));
+        updateHUD();
+        startTurn();
     }
 
     /* =========================================================================
-       4. CORE UI UPDATES
+       4. MOVEMENT & COLLISION ENGINE (THE FIX)
        ========================================================================= */
     function drawToken(p) {
         let old = document.getElementById(`tok-${p.id}`); if (old) old.remove();
         let tok = document.createElement('div');
-        tok.id = `tok-${p.id}`; tok.className = 'token';
+        tok.className = 'token'; tok.id = `tok-${p.id}`;
         tok.style.background = p.color; tok.innerText = p.emoji;
         document.getElementById(`tc-${p.pos}`).appendChild(tok);
     }
 
-    function updateHUD() {
-        const hud = document.getElementById('hud'); hud.innerHTML = '';
-        let maxAcorns = Math.max(...state.players.map(p => p.acorns));
+    function moveOneStep(p, amtRemaining, evaluateAtEnd) {
+        if (amtRemaining === 0) {
+            state.isAnimating = false;
+            if (evaluateAtEnd) handleLanding(p);
+            else passTurn();
+            return;
+        }
 
-        state.players.forEach((p, i) => {
-            let isLeader = p.acorns === maxAcorns && p.acorns > 0;
-            let badges = '';
-            if(p.ally) badges += `<div class="ally-badge">🤝 ${p.ally.name}</div> `;
-            p.upgrades.forEach(u => badges += `<div class="upgrade-badge">⚙️ ${u.name}</div> `);
-            if(p.team) badges += `<div class="team-badge">🛡️ ${p.team}</div>`;
+        let direction = amtRemaining > 0 ? 1 : -1;
+        
+        // Snow Tires Upgrade: Block backward movement
+        if (direction === -1 && p.upgrades.includes("Snow Tires")) {
+            log(`<b>${p.name}</b> used Snow Tires to stop a slide!`);
+            handleLanding(p);
+            return;
+        }
 
-            // Display Laps: Never show negative laps on the HUD using Math.max
-            let displayLaps = Math.max(0, p.laps);
+        p.pos += direction;
 
-            hud.innerHTML += `
-                <div class="player-card ${i === state.turn ? 'active' : ''}" style="border-top-color:${p.color};">
-                    <div style="color:${p.color}; font-weight:900; font-size: 1.1rem; text-shadow: 0 0 5px rgba(0,0,0,0.8);">${isLeader ? '👑 ' : ''}${p.name}</div>
-                    <div style="font-size: clamp(1.5rem, 4vmin, 2.2rem); color: #FFC107; margin: 2px 0; font-weight:bold;">${p.acorns} 🌰</div>
-                    <div style="font-size: 0.9rem; color: #CCC; margin-bottom: 5px;">Laps: ${displayLaps}/3</div>
-                    <div>${badges}</div>
-                </div>`;
-        });
-        document.getElementById('turn-counter').innerText = state.totalTurns;
-        document.getElementById('jackpot-counter').innerText = `${state.jackpot} 🌰`;
+        // LAP LOGIC & EXPLOIT FIX
+        if (p.pos >= state.boardSize) {
+            p.pos = 0; p.laps++;
+            if (p.laps > 0) { 
+                gainAcorns(p, 2); log(`<b>${p.name}</b> Lap Complete! +2 🌰`);
+                if (p.laps >= 3) { triggerWin(p); return; }
+            }
+        } else if (p.pos < 0) {
+            p.pos = state.boardSize - 1; p.laps--;
+            log(`<b>${p.name}</b> fell back behind Start!`);
+        }
+
+        drawToken(p);
+        updateHUD();
+        
+        setTimeout(() => {
+            moveOneStep(p, amtRemaining > 0 ? amtRemaining - 1 : amtRemaining + 1, evaluateAtEnd);
+        }, 200);
     }
 
-    function log(msg) {
-        const l = document.getElementById('log');
-        let t = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-        l.innerHTML = `<div class="log-entry"><span style="color:rgba(255,255,255,0.4);">[${t}]</span> ${msg}</div>` + l.innerHTML;
-    }
-
-    function showFloatText(p, text, color) {
-        let tok = document.getElementById(`tok-${p.id}`); if(!tok) return;
-        let rect = tok.getBoundingClientRect();
-        let f = document.createElement('div');
-        f.className = 'float-text'; f.innerText = text; f.style.color = color;
-        f.style.left = `${rect.left}px`; f.style.top = `${rect.top}px`;
-        document.body.appendChild(f); setTimeout(() => f.remove(), 1000);
-    }
-
-    function showMsg(title, text, callback) {
-        document.getElementById('simple-modal').style.display = 'flex';
-        document.getElementById('sm-title').innerText = title; document.getElementById('sm-text').innerHTML = text;
-        document.getElementById('modal-btn-container').innerHTML = `<button class="btn btn-cyan" id="modal-ok-btn" style="width: auto; padding: 1.5vmin 4vmin;">CONTINUE</button>`;
-        document.getElementById('modal-ok-btn').onclick = () => { document.getElementById('simple-modal').style.display = 'none'; if (callback) callback(); };
-    }
-
-    function showChoice(title, text, buttons) {
-        document.getElementById('simple-modal').style.display = 'flex';
-        document.getElementById('sm-title').innerText = title; document.getElementById('sm-text').innerHTML = text;
-        let btnContainer = document.getElementById('modal-btn-container'); btnContainer.innerHTML = '';
-        buttons.forEach(b => {
-            let btn = document.createElement('button'); btn.className = `btn ${b.class || ''}`; btn.innerText = b.text;
-            btn.style.width = 'auto'; btn.style.padding = '1.5vmin 3vmin';
-            btn.onclick = () => { document.getElementById('simple-modal').style.display = 'none'; b.action(); };
-            btnContainer.appendChild(btn);
-        });
+    function handleLanding(p) {
+        // Duel Check
+        let enemy = state.players.find(o => o.id !== p.id && o.pos === p.pos);
+        if (enemy) {
+            triggerDuel(p, enemy, () => evaluateSpace(p));
+        } else {
+            evaluateSpace(p);
+        }
     }
 
     /* =========================================================================
-       5. TURN ENGINE, ROLLING & THE LAP EXPLOIT FIX
+       5. SPACE EVALUATION (NO-FREEZE LOGIC)
        ========================================================================= */
-    function startTurn() {
-        let p = state.players[state.turn];
-        document.getElementById('turn-indicator').innerText = `${p.emoji} ${p.name}'s Turn`;
-        document.getElementById('turn-indicator').style.color = p.color;
-        
-        if (state.totalTurns > 1 && state.turn === 0 && state.totalTurns % 6 === 0) triggerRandomWeather();
+    function evaluateSpace(p) {
+        let type = state.spaceActions[p.pos];
+        log(`<b>${p.name}</b> landed on <b>${type}</b>`);
 
-        if (state.totalTurns > 40 && !state.suddenDeath) {
-            state.suddenDeath = true; document.body.classList.add('sudden-death');
-            showMsg("💥 METEOR SHOWER 💥", "Sudden Death! Everyone loses 1 🌰 per turn.", () => processTurnStart(p));
-            return;
+        switch(type) {
+            case "+1 🌰": gainAcorns(p, 1); passTurn(); break;
+            case "+2 🌰": gainAcorns(p, 2); passTurn(); break;
+            case "Market": openMarket(p); break;
+            case "JACKPOT": claimJackpot(p); break;
+            case "Jaap STOP": case "Bear Trap": 
+                p.skip = true; 
+                if (type === "Bear Trap") loseAcorns(p, 1, true);
+                showMsg(type, "You are frozen for 1 turn!", passTurn);
+                break;
+            case "Ice Cave": 
+                let target = Math.floor(Math.random() * state.boardSize);
+                showMsg("ICE CAVE", "Warping to a random location!", () => teleportToken(p, target));
+                break;
+            case "TEAM PACT":
+                if (p.team) passTurn();
+                else {
+                    let partner = state.players.filter(o => o.id !== p.id && !o.team).sort((a,b) => a.acorns - b.acorns)[0];
+                    if (partner) {
+                        p.team = "A"; partner.team = "A";
+                        showMsg("TEAM PACT", `Linked with ${partner.name}! Share the victory!`, passTurn);
+                    } else passTurn();
+                }
+                break;
+            case "Secret Path":
+                if (p.acorns >= 4) {
+                    showChoice("SECRET PATH", "Pay 4 🌰 to warp 9 spaces ahead?", [
+                        {text: "PAY & WARP", action: () => { loseAcorns(p, 4, false); teleportToken(p, (p.pos + 9) % state.boardSize); }},
+                        {text: "SKIP", action: passTurn}
+                    ]);
+                } else {
+                    showMsg("PATH LOCKED", "You need 4 🌰 for this shortcut!", passTurn);
+                }
+                break;
+            case "Toll Bridge":
+                showMsg("TOLL BRIDGE", "Lose 1 🌰 to cross.", () => { loseAcorns(p, 1, true); passTurn(); });
+                break;
+            case "EVENT":
+                triggerEvent(p);
+                break;
+            default: passTurn();
         }
-        processTurnStart(p);
     }
 
-    function processTurnStart(p) {
-        if (state.suddenDeath) loseAcorns(p, 1, false);
-        if (p.skip) {
-            p.skip = false; document.getElementById('btn-roll').disabled = true;
-            log(`🛑 ${p.name} loses their turn.`); showMsg("Turn Skipped", `${p.name}, your vehicle is broken. You lose this turn.`, passTurn);
-            return;
+    /* =========================================================================
+       6. CORE GAME UTILITIES
+       ========================================================================= */
+    function teleportToken(p, target) {
+        let tok = document.getElementById(`tok-${p.id}`);
+        tok.style.opacity = '0';
+        setTimeout(() => {
+            p.pos = target;
+            drawToken(p);
+            let newTok = document.getElementById(`tok-${p.id}`);
+            newTok.style.opacity = '0';
+            setTimeout(() => {
+                newTok.style.opacity = '1';
+                handleLanding(p);
+            }, 100);
+        }, 400);
+    }
+
+    function gainAcorns(p, amt) { p.acorns += amt; showFloat(p, `+${amt}`, 'var(--green)'); updateHUD(); }
+    function loseAcorns(p, amt, toJackpot) {
+        let loss = Math.min(p.acorns, amt);
+        p.acorns -= loss;
+        if (toJackpot) state.jackpot += loss;
+        showFloat(p, `-${loss}`, 'var(--red)');
+        updateHUD();
+    }
+
+    function openMarket(p) {
+        document.getElementById('market-wallet').innerText = `WALLET: ${p.acorns} 🌰`;
+        let grid = document.getElementById('market-items');
+        grid.innerHTML = `
+            <div class="market-item"><h4>MAMMOTH</h4><p>Immune to Jaap Stops</p><b>3 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Mammoth', 3)">BUY</button></div>
+            <div class="market-item"><h4>TURBO ENGINE</h4><p>+2 to every Roll</p><b>5 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Turbo Engine', 5)">BUY</button></div>
+            <div class="market-item"><h4>SNOW TIRES</h4><p>Immune to backwards slides</p><b>4 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Snow Tires', 4)">BUY</button></div>
+            <div class="market-item"><h4>CAVEMAN</h4><p>+1 to every Roll</p><b>3 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Caveman', 3)">BUY</button></div>
+        `;
+        document.getElementById('market-modal').style.display = 'flex';
+    }
+
+    window.buyItem = (name, cost) => {
+        let p = state.players[state.turn];
+        if (p.acorns >= cost) {
+            loseAcorns(p, cost, false);
+            p.upgrades.push(name);
+            log(`<b>${p.name}</b> installed <b>${name}</b>!`);
+            closeMarket();
         }
+    }
+
+    function closeMarket() { document.getElementById('market-modal').style.display = 'none'; passTurn(); }
+
+    function triggerDuel(p1, p2, cb) {
+        let r1 = Math.floor(Math.random() * 6) + 1;
+        let r2 = Math.floor(Math.random() * 6) + 1;
+        while(r1 === r2) r2 = Math.floor(Math.random() * 6) + 1;
+        
+        let win = r1 > r2 ? p1 : p2;
+        let lose = r1 > r2 ? p2 : p1;
+        
+        showMsg("⚔️ DUEL! ⚔️", `${p1.name} rolled ${r1}, ${p2.name} rolled ${r2}. ${win.name} steals 1 🌰!`, () => {
+            loseAcorns(lose, 1, false); gainAcorns(win, 1); cb();
+        });
+    }
+
+    function triggerEvent(p) {
+        const evs = [
+            {t: "Blizzard!", f: () => moveOneStep(p, -3, true)},
+            {t: "Gold Mine!", f: () => { gainAcorns(p, 4); passTurn(); }},
+            {t: "Thief!", f: () => { 
+                let richest = state.players.filter(o => o.id !== p.id).sort((a,b) => b.acorns - a.acorns)[0];
+                if (richest.acorns > 0) { loseAcorns(richest, 1, false); gainAcorns(p, 1); log(`${p.name} robbed ${richest.name}!`); }
+                passTurn();
+            }}
+        ];
+        let e = evs[Math.floor(Math.random() * evs.length)];
+        showMsg("EVENT", e.t, e.f);
+    }
+
+    function claimJackpot(p) {
+        if (state.jackpot > 0) {
+            let j = state.jackpot; state.jackpot = 0; gainAcorns(p, j);
+            showMsg("💰 JACKPOT!", `You won the ${j} 🌰 stash!`, passTurn);
+        } else passTurn();
+    }
+
+    function startTurn() {
+        let p = state.players[state.turn];
+        document.getElementById('turn-indicator').innerText = p.name;
+        document.getElementById('turn-indicator').style.color = p.color;
         document.getElementById('btn-roll').disabled = false;
+        if (state.totalTurns % 8 === 0) triggerWeather();
     }
 
     document.getElementById('btn-roll').addEventListener('click', () => {
-        let p = state.players[state.turn]; document.getElementById('btn-roll').disabled = true; 
+        let p = state.players[state.turn];
+        document.getElementById('btn-roll').disabled = true;
         
-        let finalRoll = Math.floor(Math.random() * 6) + 1;
-        if (p.ally && p.ally.name === "Caveman") { finalRoll += 1; log(`🦴 Caveman adds +1!`); }
-        if (p.upgrades.some(u => u.name === "Turbo Engine")) { finalRoll += 2; log(`🏎️ Turbo Engine adds +2!`); }
+        let roll = Math.floor(Math.random() * 6) + 1;
+        if (p.upgrades.includes("Turbo Engine")) roll += 2;
+        if (p.upgrades.includes("Caveman")) roll += 1;
 
-        let overlay = document.getElementById('dice-overlay'); let diceFace = document.getElementById('dice-face');
-        overlay.style.display = 'flex';
-        let shuffle = setInterval(() => { diceFace.innerText = Math.floor(Math.random() * 6) + 1; }, 50);
+        document.getElementById('dice-overlay').style.display = 'flex';
+        document.getElementById('dice-face').innerText = '🎲';
         
         setTimeout(() => {
-            clearInterval(shuffle); diceFace.innerText = finalRoll; diceFace.style.color = '#FF1744';
+            document.getElementById('dice-face').innerText = roll;
             setTimeout(() => {
-                overlay.style.display = 'none'; diceFace.style.color = '#000'; log(`🎲 ${p.name} rolled a ${finalRoll}.`);
-                moveTokenStepByStep(p, finalRoll, true);
+                document.getElementById('dice-overlay').style.display = 'none';
+                state.isAnimating = true;
+                moveOneStep(p, roll, true);
             }, 800);
         }, 1000);
     });
 
-    function moveTokenStepByStep(p, spacesLeft, evaluateAfter = true) {
-        if (spacesLeft < 0 && p.upgrades.some(u => u.name === "Snow Tires")) {
-            showMsg("❄️ SNOW TIRES", "Your Snow Tires gripped the ice! You ignored the slide backwards.", () => {
-                if(evaluateAfter) evaluateSpace(p); else passTurn();
-            });
-            return;
+    function passTurn() {
+        state.turn = (state.turn + 1) % state.players.length;
+        if (state.turn === 0) {
+            state.totalTurns++;
+            document.getElementById('turn-counter').innerText = state.totalTurns;
         }
-
-        if (spacesLeft === 0) {
-            let enemy = state.players.find(o => o.id !== p.id && o.pos === p.pos);
-            if (enemy && evaluateAfter) {
-                log(`⚔️ DUEL INITIATED!`); handleDuel(p, enemy, () => evaluateSpace(p));
-            } else if (evaluateAfter) { evaluateSpace(p); } else { passTurn(); }
-            return;
-        }
-
-        let direction = spacesLeft > 0 ? 1 : -1;
-        p.pos += direction;
-
-        // THE LAP EXPLOIT FIX IS HERE
-        if (p.pos >= 36) {
-            p.pos = 0; 
-            p.laps++; 
-            // Only reward them if they actually earned a POSITIVE lap (above 0)
-            if (p.laps > 0) {
-                gainAcorns(p, 2); 
-                log(`🏁 ${p.name} completed a lap! (+2 🌰)`);
-                checkWinCondition(p);
-            }
-        } else if (p.pos < 0) {
-            p.pos = 35; 
-            // Silently drop their laps into the negatives. They must re-earn passing Start!
-            p.laps--;
-            if (p.laps >= 0) {
-                log(`⏪ ${p.name} was pushed back past Start! Lost a lap.`);
-            }
-        }
-
-        drawToken(p);
-        setTimeout(() => { moveTokenStepByStep(p, spacesLeft > 0 ? spacesLeft - 1 : spacesLeft + 1, evaluateAfter); }, 200); 
+        updateHUD(); startTurn();
     }
 
-    /* =========================================================================
-       6. NEW MECHANICS (TEAM PACT, SHORTCUT, WIN LOGIC)
-       ========================================================================= */
-    function checkWinCondition(p) {
-        if (p.laps >= 3) {
-            if (p.team) {
-                let partner = state.players.find(o => o.id !== p.id && o.team === p.team);
-                showMsg("🏆 ALLIANCE VICTORY!", `<span style="color:${p.color};">${p.name}</span> crossed the finish line! Because of the Team Pact, <span style="color:${partner.color};">${partner.name}</span> also wins!`, () => location.reload());
-            } else {
-                showMsg("🏆 WINNER!", `<span style="color:${p.color}; font-weight:bold;">${p.name}</span> finished 3 laps and wins the game!`, () => location.reload());
-            }
-        }
-    }
-
-    function triggerTeamMode(p) {
-        if(p.team) { showMsg("TEAM PACT", "You are already in an alliance.", passTurn); return true; }
-        
-        let others = state.players.filter(o => o.id !== p.id && !o.team);
-        if(others.length === 0) { showMsg("TEAM PACT", "Everyone is already teamed up!", passTurn); return true; }
-        
-        others.sort((a,b) => a.acorns - b.acorns);
-        let partner = others[0];
-        
-        let teamName = "Alliance";
-        p.team = teamName; partner.team = teamName;
-        log(`🤝 ${p.name} and ${partner.name} formed an Alliance!`);
-        updateHUD();
-
-        showMsg("🤝 THE TEAM PACT 🤝", `You triggered the ancient pact! You are now permanently allied with the player in last place: <b>${partner.name}</b>. If either of you finishes 3 laps, YOU BOTH WIN.`, passTurn);
-        return true;
-    }
-
-    function triggerShortcut(p) {
-        if(p.acorns >= 4) { // Increased cost to slow players down
-            showChoice("❄️ SECRET ICE TUNNEL", "Pay 4 🌰 to take the hidden tunnel and skip ahead?", [
-                {text: "Pay 4 🌰 & Warp", class: "btn-cyan", action: () => { 
-                    loseAcorns(p, 4, false); 
-                    log(`🚇 ${p.name} took the secret tunnel!`);
-                    teleport(p, (p.pos + 9) % 36); 
-                }},
-                {text: "No thanks", action: passTurn}
-            ]);
-            return true;
-        } else {
-            showMsg("❄️ SECRET ICE TUNNEL", "You need 4 🌰 to unlock this shortcut. Keep walking!", passTurn);
-            return true;
-        }
-    }
-
-    /* =========================================================================
-       7. THE GRAND STORE/MARKET MODAL
-       ========================================================================= */
-    function openMarketMenu(p) {
-        document.getElementById('market-wallet').innerText = `Your Wallet: ${p.acorns} 🌰`;
-        let container = document.getElementById('market-items-container');
-        container.innerHTML = '';
-
-        MarketInventory.allies.forEach(a => {
-            let alreadyOwned = state.players.some(pl => pl.ally && pl.ally.name === a.name);
-            let canAfford = p.acorns >= a.cost;
-            let btnHTML = alreadyOwned ? `<button class="btn btn-small" disabled>Out of Stock</button>` : 
-                          canAfford ? `<button class="btn btn-small btn-cyan" onclick="buyAlly(${p.id}, '${a.name}')">BUY</button>` : 
-                          `<button class="btn btn-small" disabled>Too Expensive</button>`;
-
-            container.innerHTML += `
-                <div class="market-item">
-                    <div><h4>🤝 ${a.name}</h4><p>${a.effect}</p></div>
-                    <div><div class="market-cost">${a.cost} 🌰</div>${btnHTML}</div>
+    function updateHUD() {
+        const hud = document.getElementById('hud'); hud.innerHTML = '';
+        state.players.forEach((p, i) => {
+            hud.innerHTML += `
+                <div class="player-card ${state.turn === i ? 'active' : ''}" style="border-left-color:${p.color}">
+                    <div style="font-size:1.2rem; font-weight:900;">${p.emoji} ${p.name}</div>
+                    <div style="color:var(--gold); font-weight:bold;">${p.acorns} 🌰 | Lap: ${Math.max(0, p.laps)}/3</div>
+                    <div>${p.upgrades.map(u => `<span class="badge" style="color:var(--cyan)">${u}</span>`).join(' ')}</div>
                 </div>`;
         });
-
-        MarketInventory.upgrades.forEach(u => {
-            let alreadyOwned = p.upgrades.some(up => up.name === u.name);
-            let canAfford = p.acorns >= u.cost;
-            let btnHTML = alreadyOwned ? `<button class="btn btn-small" disabled>Installed</button>` : 
-                          canAfford ? `<button class="btn btn-small btn-cyan" onclick="buyUpgrade(${p.id}, '${u.name}')">BUY</button>` : 
-                          `<button class="btn btn-small" disabled>Too Expensive</button>`;
-
-            container.innerHTML += `
-                <div class="market-item">
-                    <div><h4>⚙️ ${u.name}</h4><p>${u.effect}</p></div>
-                    <div><div class="market-cost">${u.cost} 🌰</div>${btnHTML}</div>
-                </div>`;
-        });
-
-        document.getElementById('market-modal').style.display = 'flex';
-        return true; 
+        document.getElementById('jackpot-counter').innerText = state.jackpot;
     }
 
-    function buyAlly(playerId, allyName) {
-        let p = state.players.find(pl => pl.id === playerId);
-        let ally = MarketInventory.allies.find(a => a.name === allyName);
-        if (p.acorns >= ally.cost && !p.ally) {
-            loseAcorns(p, ally.cost, false);
-            p.ally = ally; log(`🤝 ${p.name} hired ${ally.name}!`); updateHUD(); openMarketMenu(p); 
+    function log(m) {
+        const l = document.getElementById('log');
+        l.innerHTML = `<div class="log-entry"><b>></b> ${m}</div>` + l.innerHTML;
+    }
+
+    function showFloat(p, t, c) {
+        let tc = document.getElementById(`tc-${p.pos}`);
+        let f = document.createElement('div');
+        f.className = 'float-text'; f.innerText = t; f.style.color = c;
+        let r = tc.getBoundingClientRect();
+        f.style.left = r.left + 'px'; f.style.top = r.top + 'px';
+        document.body.appendChild(f);
+        setTimeout(() => f.remove(), 1000);
+    }
+
+    function triggerWin(p) {
+        let msg = `${p.name} WON THE GAME!`;
+        if (p.team) {
+            let partner = state.players.find(o => o.id !== p.id && o.team === p.team);
+            msg = `TEAM VICTORY! ${p.name} and ${partner.name} WIN!`;
         }
+        showMsg("🏆 CHAMPION!", msg, () => location.reload());
     }
 
-    function buyUpgrade(playerId, upgradeName) {
-        let p = state.players.find(pl => pl.id === playerId);
-        let upg = MarketInventory.upgrades.find(u => u.name === upgradeName);
-        if (p.acorns >= upg.cost && !p.upgrades.some(u => u.name === upgradeName)) {
-            loseAcorns(p, upg.cost, false);
-            p.upgrades.push(upg); log(`⚙️ ${p.name} installed ${upg.name}!`); updateHUD(); openMarketMenu(p); 
-        }
+    function triggerWeather() {
+        let fx = document.getElementById('fx-layer');
+        let w = ['snow', 'rain', 'clear'][Math.floor(Math.random() * 3)];
+        if (w === 'clear') { fx.style.opacity = '0'; log("☀️ Weather is clear."); }
+        else { fx.className = 'weather-' + w; fx.style.opacity = '1'; log(`🌧️ Weather shift: ${w.toUpperCase()}`); }
     }
 
-    function closeMarket() {
-        document.getElementById('market-modal').style.display = 'none';
-        passTurn();
+    function showMsg(t, s, cb) {
+        const m = document.getElementById('simple-modal');
+        m.style.display = 'flex';
+        document.getElementById('sm-title').innerText = t;
+        document.getElementById('sm-text').innerText = s;
+        document.getElementById('modal-btn-container').innerHTML = `<button class="btn btn-cyan" onclick="closeMsg()">CONTINUE</button>`;
+        window.closeMsg = () => { m.style.display = 'none'; if(cb) cb(); };
     }
 
-    /* =========================================================================
-       8. STANDARD BOARD FUNCTIONS
-       ========================================================================= */
-    function handleDuel(attacker, defender, callback) {
-        let r1 = Math.floor(Math.random() * 6) + 1; let r2 = Math.floor(Math.random() * 6) + 1;
-        while(r1 === r2) { r1 = Math.floor(Math.random() * 6) + 1; r2 = Math.floor(Math.random() * 6) + 1; }
-        let winner = r1 > r2 ? attacker : defender; let loser = r1 > r2 ? defender : attacker;
-        showMsg("⚔️ COMBAT ARENA ⚔️", `${attacker.name} rolled a <b>${r1}</b>.<br>${defender.name} rolled a <b>${r2}</b>.<br><br><span style="color:${winner.color}; font-weight:bold; font-size:1.5em;">${winner.name} Wins!</span><br>Steals 1 🌰.`, () => {
-            loseAcorns(loser, 1, false); gainAcorns(winner, 1); callback();
+    function showChoice(t, s, b) {
+        const m = document.getElementById('simple-modal');
+        m.style.display = 'flex';
+        document.getElementById('sm-title').innerText = t;
+        document.getElementById('sm-text').innerText = s;
+        let c = document.getElementById('modal-btn-container');
+        c.innerHTML = '';
+        b.forEach(btn => {
+            let el = document.createElement('button');
+            el.className = 'btn btn-cyan'; el.style.width = 'auto'; el.style.margin = '5px';
+            el.innerText = btn.text; el.onclick = () => { m.style.display = 'none'; btn.action(); };
+            c.appendChild(el);
         });
     }
-
-    function teleport(p, spaceIndex) { p.pos = spaceIndex; drawToken(p); evaluateSpace(p); }
-    function jumpTo(p, spaceName) {
-        let target = -1;
-        for(let i=1; i<36; i++) { let checkPos = (p.pos + i) % 36; let sp = SpaceData[checkPos] || {t:""}; if(sp.t.toLowerCase().includes(spaceName.toLowerCase())) { target = checkPos; break; } }
-        if(target !== -1) teleport(p, target); else passTurn();
-    }
-
-    function evaluateSpace(p) {
-        let sp = SpaceData[p.pos] || { t: "Free space" }; log(`📍 ${p.name} landed on: ${sp.t}`);
-        if (sp.t.includes("Free space") && p.ally && p.ally.name === "Squirrel") { log(`🐿️ Squirrel found a nut!`); gainAcorns(p, 1); }
-        updateHUD();
-        if (sp.action) { let blockPass = sp.action(p); if (!blockPass) passTurn(); } else { passTurn(); }
-    }
-
-    function gainAcorns(p, amt) { p.acorns += amt; showFloatText(p, `+${amt}`, '#00E676'); log(`💰 ${p.name} got ${amt} 🌰.`); updateHUD(); }
-    function loseAcorns(p, amt, toJackpot = false) {
-        let loss = Math.min(p.acorns, amt); p.acorns -= loss;
-        if(loss > 0) { showFloatText(p, `-${loss}`, '#FF1744'); if(toJackpot) { state.jackpot += loss; log(`🔻 ${p.name} lost ${loss} 🌰 to Jackpot.`); } else { log(`🔻 ${p.name} lost ${loss} 🌰.`); } }
-        updateHUD();
-    }
-
-    function claimJackpot(p) {
-        if (state.jackpot > 0) { let pot = state.jackpot; state.jackpot = 0; gainAcorns(p, pot); showMsg("💰 JACKPOT! 💰", `You found the hidden stash! Collect ${pot} 🌰!`, passTurn); } 
-        else { showMsg("JACKPOT", "The Jackpot is empty right now.", passTurn); }
-        return true;
-    }
-
-    function triggerJaap(p) {
-        if (p.ally && p.ally.name === "Mammoth") { showMsg("MAMMOTH STRENGTH", "Mammoth pushed you out of the ice! Do NOT skip a turn.", passTurn); } 
-        else { p.skip = true; showMsg("JAAP STOP", "Vehicle broke down. Skip next turn.", passTurn); }
-        return true;
-    }
-
-    function triggerEvent(p) {
-        let ev = Events[Math.floor(Math.random() * Events.length)]; log(`📜 Event: ${ev.desc}`);
-        showMsg("EVENT DRAWN", ev.desc, () => { ev.f(p); if(ev.desc.includes("Collect") || ev.desc.includes("loses 1") || ev.desc.includes("Steal")) { passTurn(); } });
-        return true; 
-    }
-
-    function triggerIceCave(p) {
-        let freeSpaces = []; SpaceData.forEach((s, i) => { if (s.t === "Free space") freeSpaces.push(i); });
-        let target = freeSpaces[Math.floor(Math.random() * freeSpaces.length)];
-        showMsg("ICE CAVE", "Warping across the board to a Free Space!", () => teleport(p, target));
-        return true;
-    }
-
-    function stealFromRichest(p) {
-        let others = state.players.filter(pl => pl.id !== p.id); others.sort((a,b) => b.acorns - a.acorns); let richest = others[0];
-        if (richest.acorns > 0) { loseAcorns(richest, 1, false); gainAcorns(p, 1); log(`🦝 ${p.name} stole 1 🌰 from ${richest.name}!`); }
-    }
-
-    function passTurn() { state.turn = (state.turn + 1) % state.players.length; if (state.turn === 0) state.totalTurns++; updateHUD(); startTurn(); }
 
 </script>
 </body>
