@@ -18,8 +18,15 @@
             --red: #FF1744;
             --green: #00E676;
         }
-
+        /* INSTRUCTIONS BUTTONS & PANEL */
+        .btn-info { background: #607D8B; box-shadow: 0 4px 0 #37474F; color: #FFF; font-size: 0.9rem; padding: 10px; margin-top: 5px; }
+        .instr-grid { text-align: left; display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 50vh; overflow-y: auto; padding: 10px; }
+        .instr-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cyan); font-size: 0.95rem; line-height: 1.4; }
+        .instr-item b { color: var(--gold); }
+        #sm-body { max-height: 60vh; overflow-y: auto; }
         html, body {
+
+            
             width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
@@ -150,6 +157,7 @@
             
             <div id="player-inputs"></div>
             <button id="btn-start" class="btn btn-cyan" style="margin-top: 20px;">INITIALIZE GAME</button>
+            <button class="btn btn-info" onclick="showInstructions()">GAME INSTRUCTIONS</button>
         </div>
     </div>
 
@@ -175,6 +183,7 @@
                     TURN: <span id="turn-counter">1</span> | JACKPOT: <span id="jackpot-counter">0</span> 🌰
                 </div>
                 <button id="btn-roll" class="btn">ROLL DICE 🎲</button>
+                <button class="btn btn-info" onclick="showInstructions()">HOW TO PLAY</button>
                 <div id="log"></div>
             </div>
         </div>
@@ -581,7 +590,7 @@
         const m = document.getElementById('simple-modal');
         m.style.display = 'flex';
         document.getElementById('sm-title').innerText = t;
-        document.getElementById('sm-text').innerText = s;
+        document.getElementById('sm-text').innerHTML = s;
         document.getElementById('modal-btn-container').innerHTML = `<button class="btn btn-cyan" onclick="closeMsg()">CONTINUE</button>`;
         window.closeMsg = () => { m.style.display = 'none'; if(cb) cb(); };
     }
@@ -590,7 +599,7 @@
         const m = document.getElementById('simple-modal');
         m.style.display = 'flex';
         document.getElementById('sm-title').innerText = t;
-        document.getElementById('sm-text').innerText = s;
+        document.getElementById('sm-text').innerHTML = s;
         let c = document.getElementById('modal-btn-container');
         c.innerHTML = '';
         b.forEach(btn => {
@@ -601,6 +610,28 @@
         });
     }
 
+
+    function showInstructions() {
+        const body = `
+            <div class="instr-grid">
+                <div class="instr-item"><b>Objective:</b> Be the first explorer to complete 3 laps around the board!</div>
+                <div class="instr-item"><b>Laps:</b> Passing Start earns 2 acorns. <b>Beware:</b> Being pushed back past Start will lose you a lap.</div>
+                <div class="instr-item"><b>Village Outpost:</b> Buy upgrades here. <b>Turbo</b> (+2 rolls), <b>Snow Tires</b> (no sliding back), and <b>Allies</b>.</div>
+                <div class="instr-item"><b>Team Pact:</b> Forms an alliance with the player in last place. If either of you finishes, you both win!</div>
+                <div class="instr-item"><b>Traps:</b> Bear Traps and Jaap Stops freeze you for 1 turn. Toll Bridges require 1 acorn to cross.</div>
+                <div class="instr-item"><b>Duels:</b> Land on another player to initiate a duel. The winner steals an acorn!</div>
+            </div>`;
+        
+        // Using your existing showMsg structure but targeting a new body div
+        const m = document.getElementById('simple-modal');
+        m.style.display = 'flex';
+        document.getElementById('sm-title').innerText = "ICE AGE SURVIVAL GUIDE";
+        document.getElementById('sm-text').innerHTML = body; // Changed to innerHTML to render the grid
+        document.getElementById('modal-btn-container').innerHTML = `<button class="btn btn-cyan" onclick="closeMsg()">BACK TO GAME</button>`;
+        window.closeMsg = () => { m.style.display = 'none'; };
+    }
+
 </script>
 </body>
 </html>
+
