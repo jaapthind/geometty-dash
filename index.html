@@ -1,151 +1,747 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>macOS Tahoe Infinity ULTRA MAX</title>
-<style>
-:root{
-    --glass: rgba(255,255,255,0.18);
-    --glass-strong: rgba(255,255,255,0.38);
-    --glass-dark: rgba(20,20,25,0.75);
-    --blur: blur(60px) saturate(200%);
-    --radius: 18px;
-    --accent: #007aff;
-    --danger: #ff3b30;
-    --success: #28c840;
-    --warn: #ff9f0a;
-    --menu-h: 32px;
-    --dock-h: 96px;
-    --shadow: 0 40px 120px rgba(0,0,0,.6);
-}
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;user-select:none;}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;}
-#boot-screen{position:fixed;inset:0;background:black;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;z-index:99999999;transition:opacity 1.2s ease;}
-#boot-logo{font-size:100px;animation:pulse 2s infinite ease-in-out;}
-@keyframes pulse{0%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
-#menu-bar{position:absolute;top:0;width:100%;height:var(--menu-h);backdrop-filter:var(--blur);background:var(--glass);border-bottom:1px solid rgba(255,255,255,0.2);display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-size:13px;color:white;z-index:100000;}
-.menu-left,.menu-right{display:flex;align-items:center;gap:18px;}
-.menu-item{cursor:pointer;}
-.menu-item.bold{font-weight:600;}
-#workspace{position:absolute;top:var(--menu-h);width:100%;height:calc(100% - var(--menu-h));overflow:hidden;}
-.window{position:absolute;width:920px;height:620px;border-radius:var(--radius);background:rgba(255,255,255,0.92);backdrop-filter:var(--blur);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease,opacity .25s ease;}
-.window.dark{background:var(--glass-dark);color:white;}
-.titlebar{height:42px;display:flex;align-items:center;padding:0 15px;cursor:grab;background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));}
-.window.dark .titlebar{background:rgba(255,255,255,0.05);}
-.traffic{display:flex;gap:8px;margin-right:20px;}
-.dot{width:12px;height:12px;border-radius:50%;}
-.red{background:#ff5f57;}
-.yellow{background:#febc2e;}
-.green{background:#28c840;}
-.title{flex:1;text-align:center;font-weight:600;font-size:13px;pointer-events:none;}
-.window-body{flex:1;overflow:auto;}
-#dock-container{position:absolute;bottom:12px;width:100%;display:flex;justify-content:center;z-index:100000;}
-#dock{height:var(--dock-h);padding:12px 25px;backdrop-filter:var(--blur);background:var(--glass);border-radius:30px;display:flex;align-items:flex-end;gap:16px;}
-.dock-icon{width:56px;height:56px;border-radius:18px;background:white;cursor:pointer;transition:all .15s ease;position:relative;}
-.dock-icon:hover{transform:scale(1.45) translateY(-18px);}
-.dock-dot{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:white;opacity:0;}
-.dock-dot.active{opacity:1;}
-#notifications{position:absolute;right:20px;top:60px;width:320px;display:flex;flex-direction:column;gap:15px;z-index:200000;}
-.notification{background:var(--glass-strong);backdrop-filter:var(--blur);padding:16px;border-radius:var(--radius);color:white;animation:slide .4s ease;}
-@keyframes slide{from{transform:translateX(120px);opacity:0}to{transform:translateX(0);opacity:1}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ICE AGE: THE BOARD GAME</title>
+    <style>
+        /* ==========================================================================
+           1. STRICT IFRAME/GITHUB PAGES LAYOUT ENGINE (Zero Scroll Guarantee)
+           ========================================================================== */
+        @import url('https://fonts.googleapis.com/css2?family=Carter+One&family=Nunito:wght@400;700;900&display=swap');
+
+        :root {
+            --gold: #FFC107; --cyan: #00E5FF; --red: #FF1744; --green: #00E676; --purple: #D500F9;
+            --glass-bg: rgba(20, 25, 30, 0.85); 
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        /* CRITICAL SIZING FIX: 
+           Using 100% instead of 100vh prevents Google Sites iframes from cutting off the bottom. 
+           Absolute positioning locks the game to the exact pixel bounds of the window.
+        */
+        html, body { 
+            width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; 
+            box-sizing: border-box; touch-action: none; font-family: 'Nunito', sans-serif; 
+            background: #0d1321; color: #FFF; position: absolute; inset: 0;
+        }
+
+        * { box-sizing: inherit; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        /* Smooth background for performance */
+        #bg-canvas { 
+            position: absolute; inset: 0; z-index: -10; 
+            background: radial-gradient(circle at center, #003a5c 0%, #0d1321 100%); 
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+
+        .glass-panel { 
+            background: var(--glass-bg); border: 1px solid var(--glass-border); 
+            border-radius: 1.5vmin; position: relative; overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+
+        /* ==========================================================================
+           2. SETUP SCREEN (Perfectly Centered & Scaled)
+           ========================================================================== */
+        #setup-container { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 0.3s ease; padding: 2vmin; background: rgba(13, 19, 33, 0.98); }
+        #setup-screen { width: 100%; max-width: 650px; padding: 4vmin; text-align: center; display: flex; flex-direction: column; gap: 2vmin; border: 2px solid var(--cyan); }
+        
+        .title-text { color: var(--cyan); font-size: clamp(2.5rem, 8vmin, 5rem); margin: 0; font-family: 'Carter One'; text-shadow: 2px 2px 0px #000; }
+        .subtitle-text { color: var(--gold); font-size: clamp(1.2rem, 3.5vmin, 2rem); margin: 0 0 2vmin 0; letter-spacing: 0.5vmin; text-transform: uppercase;}
+
+        .setup-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6); padding: 1.5vmin; border-radius: 1vmin; border: 1px solid var(--glass-border); }
+        .setup-row input { font-size: clamp(1rem, 2.5vmin, 1.5rem); padding: 1vmin; width: 70%; background: #000; color: #FFF; border: 1px solid var(--cyan); border-radius: 0.5vmin; font-weight: bold; outline: none; text-align: center;}
+        .player-color-dot { width: 4vmin; height: 4vmin; border-radius: 50%; border: 2px solid #FFF; }
+
+        .btn { background: var(--gold); border: 2px solid #FFF; padding: 1.5vmin 3vmin; font-size: clamp(1rem, 3vmin, 1.5rem); font-family: 'Carter One'; cursor: pointer; border-radius: 1vmin; color: #000; text-transform: uppercase; transition: transform 0.1s; width: 100%; will-change: transform; }
+        .btn:active { transform: scale(0.95); }
+        .btn-cyan { background: var(--cyan); }
+        .btn-red { background: var(--red); color: white; }
+        select.btn { text-align: center; appearance: none; background: #222; color: #FFF; border-color: var(--cyan);}
+
+        /* ==========================================================================
+           3. MASTER GAME LAYOUT (Fluid Flexbox for Landscape/Portrait)
+           ========================================================================== */
+        #game-interface { display: none; width: 100%; height: 100%; padding: 1vmin; gap: 1vmin; position: absolute; inset: 0;}
+        
+        /* Landscape Mode (PC/Tablets) */
+        @media (min-aspect-ratio: 1/1) {
+            #game-interface { flex-direction: row; }
+            #left-col { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; padding: 1vmin;}
+            #right-col { flex: 0 0 450px; max-width: 45vw; display: flex; flex-direction: column; gap: 1vmin; height: 100%; min-height: 0; }
+            #hud { height: 45%; overflow-y: auto; flex-direction: column; }
+            #controls { height: 55%; }
+        }
+        /* Portrait Mode (Mobile) */
+        @media (max-aspect-ratio: 1/1) {
+            #game-interface { flex-direction: column; }
+            #left-col { flex: 0 0 55%; display: flex; justify-content: center; align-items: center; width: 100%; min-height: 0; padding: 1vmin;}
+            #right-col { flex: 1; display: flex; flex-direction: column; gap: 1vmin; width: 100%; min-height: 0; }
+            #hud { height: 40%; flex-direction: row; flex-wrap: wrap; overflow-y: auto; }
+            #controls { height: 60%; }
+        }
+
+        /* HUD STYLES */
+        #hud { display: flex; gap: 1vmin; width: 100%; }
+        .hud-player { flex: 1; min-width: 45%; padding: 1.5vmin; text-align: center; border-radius: 1vmin; display: flex; flex-direction: column; justify-content: center; border-top: 4px solid; background: rgba(0,0,0,0.6);}
+        .hud-player.active { background: rgba(255, 193, 7, 0.15) !important; border: 2px solid var(--gold); }
+        .hud-player.eliminated { opacity: 0.3; filter: grayscale(1); }
+        .p-name { font-size: clamp(1rem, 2.5vmin, 1.4rem); font-weight: bold; text-transform: uppercase; } 
+        .p-acorns { font-size: clamp(1.8rem, 5vmin, 3rem); color: var(--gold); font-family: 'Carter One'; display: flex; align-items: center; justify-content: center; gap: 0.5vmin; margin: 0.5vmin 0; }
+        
+        /* CONTROLS STYLES */
+        #controls { display: flex; flex-direction: column; padding: 1.5vmin; align-items: center; background: rgba(0,0,0,0.8); }
+        #turn-indicator { font-size: clamp(1.5rem, 3.5vmin, 2.5rem); margin-bottom: 1vmin; font-family: 'Carter One'; text-align: center; }
+        .control-buttons { display: flex; gap: 1vmin; width: 100%; margin-bottom: 1vmin; }
+        #log { color: #00E676; width: 100%; flex: 1; padding: 1vmin; overflow-y: auto; font-family: monospace; font-size: clamp(0.9rem, 2vmin, 1.2rem); background: #000; border: 1px solid rgba(255,255,255,0.2); border-radius: 1vmin;}
+        .log-entry { border-bottom: 1px dotted rgba(255,255,255,0.2); padding: 0.8vmin 0; }
+
+        /* ==========================================================================
+           4. RESPONSIVE GAME BOARD (Perfect Square)
+           ========================================================================== */
+        #board-wrapper { 
+            position: relative; width: 100%; height: 100%; 
+            max-width: 100vh; max-height: 100vw; 
+            aspect-ratio: 1/1; display: flex; justify-content: center; align-items: center; 
+        }
+        
+        #board { 
+            display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); 
+            gap: 2px; width: 100%; height: 100%; padding: 4px; position: absolute; 
+            background: rgba(0,0,0,0.4); border-radius: 1.5vmin; border: 2px solid var(--glass-border);
+        }
+
+        #center-island { grid-column: 2 / 10; grid-row: 2 / 10; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; border-radius: 1vmin; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); }
+        .biome { display: flex; align-items: center; justify-content: center; font-family: 'Carter One'; font-size: clamp(1rem, 3vmin, 3rem); color: #FFF; text-align: center; z-index: 1; padding: 2%; line-height: 1.1; }
+        .b-grass { background: #1b5e20; } .b-mtn { background: #37474f; } .b-vill { background: #4e342e; } .b-snow { background: #01579b; }
+
+        .space { 
+            background: #FFF; border: 1px solid #000; border-radius: 4px; color: #000; font-weight: 900; 
+            font-size: clamp(0.4rem, 1.5vmin, 0.9rem); display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; text-align: center; padding: 1px; position: relative; line-height: 1; 
+        }
+        .space.glow { border: 2px solid var(--gold); background: #fffde7; }
+        
+        .s-start { background: var(--gold); font-family: 'Carter One'; font-size: clamp(0.7rem, 1.8vmin, 1.2rem); }
+        .s-jaap { background: var(--red); color: #FFF; border-radius: 50%; aspect-ratio: 1/1;}
+        .s-event { color: var(--red); font-size: clamp(1.2rem, 3vmin, 2.5rem); font-family: 'Carter One'; }
+        .s-cyan { background: var(--cyan); }
+        .s-end { background: var(--red); font-family: 'Carter One'; color: #FFF; }
+
+        .token-container { display: flex; flex-wrap: wrap; gap: 1px; justify-content: center; position: absolute; bottom: 2px; width: 100%; z-index: 20; }
+        .token { 
+            width: clamp(12px, 3vmin, 28px); height: clamp(12px, 3vmin, 28px); border-radius: 50%; 
+            border: 2px solid #FFF; color: #FFF; font-weight: bold; display: flex; align-items: center; 
+            justify-content: center; font-size: clamp(0.5rem, 1.5vmin, 1rem); z-index: 100; 
+            will-change: transform; transition: transform 0.2s linear; box-shadow: 0 2px 5px rgba(0,0,0,0.8);
+        }
+
+        /* ==========================================================================
+           5. ACTION BANNER & OVERLAYS
+           ========================================================================== */
+        /* ACTION BANNER - The fix for events not showing properly */
+        #action-banner {
+            position: fixed; top: 50%; left: 0; width: 100%; transform: translateY(-50%) scaleY(0); 
+            background: rgba(0,0,0,0.95); border-top: 4px solid var(--gold); border-bottom: 4px solid var(--gold); 
+            color: #FFF; text-align: center; padding: 4vmin; z-index: 999999; 
+            font-family: 'Carter One'; font-size: clamp(2rem, 6vmin, 5rem); 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+        #action-banner.active { transform: translateY(-50%) scaleY(1); }
+        #action-desc { font-family: 'Nunito'; font-size: clamp(1rem, 3vmin, 2rem); color: var(--cyan); margin-top: 1vmin;}
+
+        /* 3D DICE */
+        #dice-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; }
+        #dice-overlay.active { opacity: 1; pointer-events: all; }
+
+        .scene { width: 25vmin; height: 25vmin; perspective: 1000px; }
+        .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; }
+        .cube-face { position: absolute; width: 100%; height: 100%; background: #FFF; border: 4px solid var(--gold); border-radius: 1vmin; display: flex; align-items: center; justify-content: center; font-family: 'Carter One'; font-size: 10vmin; color: #000; backface-visibility: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);}
+        
+        .cube-face-1 { transform: rotateY(  0deg) translateZ(12.5vmin); } .cube-face-2 { transform: rotateY( 90deg) translateZ(12.5vmin); } .cube-face-3 { transform: rotateY(180deg) translateZ(12.5vmin); } .cube-face-4 { transform: rotateY(-90deg) translateZ(12.5vmin); } .cube-face-5 { transform: rotateX( 90deg) translateZ(12.5vmin); } .cube-face-6 { transform: rotateX(-90deg) translateZ(12.5vmin); }
+
+        /* MODALS */
+        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 99999; opacity: 0; pointer-events: none; transition: 0.2s; padding: 2vmin; }
+        #modal-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .modal { padding: 4vmin; text-align: center; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.9); opacity: 0; transition: 0.2s; background: #111; border: 2px solid var(--cyan); border-radius: 1vmin; }
+        #modal-overlay.active .modal { transform: scale(1); opacity: 1; }
+        
+        .modal h2 { font-size: clamp(1.8rem, 5vmin, 3rem); color: var(--gold); margin: 0 0 2vmin 0; font-family: 'Carter One'; }
+        .modal p { font-size: clamp(1rem, 2.5vmin, 1.5rem); margin-bottom: 3vmin; }
+        .modal-btns { display: flex; gap: 1.5vmin; justify-content: center; flex-wrap: wrap; }
+
+        /* PARTICLES */
+        #particle-layer { position: fixed; inset: 0; pointer-events: none; z-index: 100000; overflow: hidden; perspective: 1000px; }
+        .acorn-3d { position: absolute; font-size: 8vmin; top:0; left:0; will-change: transform, opacity; z-index: 999999; pointer-events: none; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.8));}
+        .confetti { position: absolute; top:0; left:0; width: 1.5vmin; height: 1.5vmin; z-index: 999999; pointer-events: none; will-change: transform; }
+    </style>
 </head>
 <body>
-<div id="boot-screen"><div id="boot-logo"></div><div>Starting macOS Tahoe Infinity ULTRA MAX...</div></div>
-<div id="menu-bar">
-<div class="menu-left"><span class="menu-item bold"></span><span class="menu-item bold" id="active-app">Finder</span><span class="menu-item">File</span><span class="menu-item">Edit</span><span class="menu-item">View</span><span class="menu-item">Go</span><span class="menu-item">Window</span><span class="menu-item">Help</span></div>
-<div class="menu-right"><span>🔋 100%</span><span>📶</span><span id="clock"></span></div>
-</div>
-<div id="workspace"></div>
-<div id="dock-container"><div id="dock"></div></div>
-<div id="notifications"></div>
+
+    <div id="bg-canvas"></div>
+    <div id="particle-layer"></div>
+
+    <div id="action-banner">
+        <div id="action-title">ACTION!</div>
+        <div id="action-desc">Description of action</div>
+    </div>
+
+    <div id="dice-overlay">
+        <div class="scene">
+            <div class="cube" id="cube">
+                <div class="cube-face cube-face-1">1</div><div class="cube-face cube-face-2">2</div><div class="cube-face cube-face-3">3</div>
+                <div class="cube-face cube-face-4">4</div><div class="cube-face cube-face-5">5</div><div class="cube-face cube-face-6">6</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="setup-container">
+        <div id="setup-screen" class="glass-panel">
+            <h1 class="title-text">ICE AGE</h1>
+            <h2 class="subtitle-text">THE BOARD GAME</h2>
+            
+            <select id="player-count" class="btn">
+                <option value="2">2 Explorers (Duel Mode)</option>
+                <option value="3">3 Explorers</option>
+                <option value="4" selected>4 Explorers</option>
+            </select>
+            
+            <div id="player-inputs"></div>
+            <button id="btn-start-game" class="btn" style="margin-top: 2vmin;">Deploy Explorers</button>
+        </div>
+    </div>
+
+    <div id="game-interface">
+        <div id="left-col">
+            <div id="board-wrapper">
+                <div id="board">
+                    <div id="center-island">
+                        <div class="biome b-grass">GRASSY PLAINS</div>
+                        <div class="biome b-mtn">MOUNTAINS</div>
+                        <div class="biome b-vill">VILLAGE</div>
+                        <div class="biome b-snow">SNOWY TUNDRA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="right-col">
+            <div id="hud"></div>
+            <div id="controls" class="glass-panel">
+                <div id="turn-indicator">Player's Turn</div>
+                <div class="control-buttons">
+                    <button id="btn-roll" class="btn" style="flex: 2; font-size: clamp(1.8rem, 4vmin, 2.5rem);">ROLL 🎲</button>
+                </div>
+                <div class="control-buttons">
+                    <button id="btn-rules" class="btn btn-cyan" style="flex: 1; font-size: clamp(1rem, 2vmin, 1.2rem);">RULES</button>
+                </div>
+                <div id="log"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div class="modal" id="modal-box">
+            <h2 id="modal-title">System Alert</h2>
+            <div id="modal-content-area"><div id="modal-desc">Description</div></div>
+            <div id="modal-btns" class="modal-btns"></div>
+        </div>
+    </div>
 
 <script>
-// ===================== CORE ULTRA KERNEL =====================
-class UltraKernel{
-    constructor(){this.processes={};this.z=1;this.registry=[];this.init();}
-    init(){this.initClock();this.initBoot();this.initDock();}
-    initBoot(){setTimeout(()=>{document.getElementById("boot-screen").style.opacity=0;setTimeout(()=>{document.getElementById("boot-screen").remove();this.notify("System Ready","Welcome to macOS Tahoe Infinity");},1200);},3000);}
-    initClock(){setInterval(()=>{document.getElementById("clock").innerText=new Date().toLocaleString();},1000);}
-    notify(title,msg){const box=document.createElement("div");box.className="notification";box.innerHTML="<b>"+title+"</b><br>"+msg;document.getElementById("notifications").appendChild(box);setTimeout(()=>box.remove(),6000);}
-    initDock(){
-        this.registry=[{id:"finder",name:"Finder"},{id:"safari",name:"Safari"},{id:"chat",name:"DeadSimple Chat"},{id:"terminal",name:"Terminal"},{id:"monitor",name:"Activity Monitor"},{id:"notes",name:"Notes"},{id:"appstore",name:"App Store"}];
-        const dock=document.getElementById("dock");
-        this.registry.forEach(app=>{
-            const icon=document.createElement("div");icon.className="dock-icon";icon.onclick=()=>this.launch(app.id);
-            const dot=document.createElement("div");dot.className="dock-dot";dot.id="dot-"+app.id;icon.appendChild(dot);dock.appendChild(icon);
+    /* =========================================================================
+       MODULE 1: AUDIO ENGINE
+       ========================================================================= */
+    const AudioEngine = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        playTone: function(freq, type, duration, volMod=1) {
+            try {
+                let osc = this.ctx.createOscillator(); let gain = this.ctx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.8 * volMod, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
+            } catch(e) {}
+        },
+        sfxCoin: function() { this.playTone(800, 'square', 0.1, 0.3); setTimeout(() => this.playTone(1200, 'square', 0.15, 0.3), 50); },
+        sfxLose: function() { this.playTone(200, 'sawtooth', 0.2, 0.4); },
+        sfxJump: function() { this.playTone(400, 'sine', 0.1, 0.2); },
+        sfxHurt: function() { this.playTone(100, 'square', 0.3, 0.5); },
+        sfxDiceTick: function() { this.playTone(900, 'triangle', 0.05, 0.1); },
+        sfxWin: function() { this.playTone(400, 'square', 0.2, 0.5); setTimeout(() => this.playTone(500, 'square', 0.2, 0.5), 200); setTimeout(() => this.playTone(600, 'square', 0.4, 0.5), 400); }
+    };
+
+    /* =========================================================================
+       MODULE 2: GPU-ACCELERATED FX ENGINE
+       ========================================================================= */
+    const FX = {
+        layer: document.getElementById('particle-layer'),
+        
+        shootConfetti: function() {
+            const colors = ['#FFC107', '#00E5FF', '#FF1744', '#00E676', '#FFFFFF'];
+            let ww = window.innerWidth; let wh = window.innerHeight;
+
+            for(let i=0; i<60; i++) {
+                let c = document.createElement('div'); c.className = 'confetti';
+                c.style.background = colors[Math.floor(Math.random() * colors.length)];
+                let startX = Math.random() * ww;
+                c.style.transform = `translate3d(${startX}px, -20px, 0)`;
+                c.style.transition = `transform ${Math.random()*2 + 2}s linear, opacity 1s`;
+                this.layer.appendChild(c);
+                
+                requestAnimationFrame(() => {
+                    c.style.transform = `translate3d(${startX}px, ${wh + 20}px, 0) rotate(${Math.random()*720}deg)`;
+                });
+                setTimeout(() => c.remove(), 4000);
+            }
+        },
+        
+        spawn3DAcorn: function(playerId, type) {
+            if(type==='gain') AudioEngine.sfxCoin(); else AudioEngine.sfxLose();
+
+            let el = document.getElementById(`tok-${playerId}`) || document.getElementById(`hud-p${playerId}`); if(!el) return;
+            let rect = el.getBoundingClientRect(); 
+            let acorn = document.createElement('div'); acorn.className = 'acorn-3d'; acorn.innerText = '🌰';
+            
+            let startY = rect.top; let endY = type === 'gain' ? startY - 200 : startY + window.innerHeight;
+            
+            acorn.style.transform = `translate3d(${rect.left}px, ${startY}px, 0) scale(0.5)`;
+            acorn.style.transition = type === 'gain' ? 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.8s' : 'transform 1s ease-in, opacity 1s';
+            if(type==='lose') acorn.style.filter = 'grayscale(1)';
+            
+            this.layer.appendChild(acorn);
+            
+            requestAnimationFrame(() => {
+                acorn.style.transform = `translate3d(${rect.left}px, ${endY}px, 0) scale(2) rotate(${type==='gain'?360:-180}deg)`;
+                acorn.style.opacity = '0';
+            });
+            setTimeout(() => acorn.remove(), 1000);
+        },
+
+        rollCenter3DDice: function(finalNumber, callback) {
+            let overlay = document.getElementById('dice-overlay'); let cube = document.getElementById('cube');
+            document.getElementById('btn-roll').disabled = true; overlay.classList.add('active');
+            
+            let xSpin = (Math.floor(Math.random() * 2) + 3) * 360; let ySpin = (Math.floor(Math.random() * 2) + 3) * 360;
+            let xTarget = 0, yTarget = 0;
+            switch(finalNumber) {
+                case 1: xTarget = 0; yTarget = 0; break; case 2: xTarget = 0; yTarget = -90; break; case 3: xTarget = 0; yTarget = -180; break;
+                case 4: xTarget = 0; yTarget = 90; break; case 5: xTarget = -90; yTarget = 0; break; case 6: xTarget = 90; yTarget = 0; break;
+            }
+
+            cube.style.transform = `rotateX(${xSpin + xTarget}deg) rotateY(${ySpin + yTarget}deg)`;
+            let ticks = 0; let tickInt = setInterval(() => { AudioEngine.sfxDiceTick(); ticks++; if(ticks>8) clearInterval(tickInt); }, 150);
+
+            setTimeout(() => {
+                AudioEngine.sfxWin();
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                    setTimeout(() => { cube.style.transition = 'none'; cube.style.transform = `rotateX(0deg) rotateY(0deg)`; void cube.offsetWidth; cube.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)'; }, 200);
+                    callback();
+                }, 600);
+            }, 1500);
+        },
+
+        // NEW: Action Banner Engine
+        showActionBanner: function(title, desc, color, callback) {
+            let banner = document.getElementById('action-banner');
+            document.getElementById('action-title').innerText = title;
+            document.getElementById('action-title').style.color = color;
+            document.getElementById('action-desc').innerText = desc;
+            
+            banner.classList.add('active');
+            
+            // Wait for user to read, then dismiss and execute action
+            setTimeout(() => {
+                banner.classList.remove('active');
+                setTimeout(callback, 300); // Wait for banner to retract before firing action
+            }, 1500);
+        }
+    };
+
+    /* =========================================================================
+       MODULE 3: PURE BOARD MATRIX & RULES DATA (No Personalization)
+       ========================================================================= */
+    const gridMap = [
+        {c:1, r:1}, {c:2, r:1}, {c:3, r:1}, {c:4, r:1}, {c:5, r:1}, {c:6, r:1}, {c:7, r:1}, {c:8, r:1}, {c:9, r:1}, {c:10, r:1}, 
+        {c:10, r:2}, {c:10, r:3}, {c:10, r:4}, {c:10, r:5}, {c:10, r:6}, {c:10, r:7}, {c:10, r:8}, {c:10, r:9}, 
+        {c:10, r:10}, {c:9, r:10}, {c:8, r:10}, {c:7, r:10}, {c:6, r:10}, {c:5, r:10}, {c:4, r:10}, {c:3, r:10}, {c:2, r:10}, {c:1, r:10}, 
+        {c:1, r:9}, {c:1, r:8}, {c:1, r:7}, {c:1, r:6}, {c:1, r:5}, {c:1, r:4}, {c:1, r:3}, {c:1, r:2} 
+    ];
+
+    const SpaceData = [
+        { t: "START", class: "s-start" }, { t: "+1 🌰", f: (p) => addAcorns(p, 1) }, { t: "?", class: "s-event" },
+        { t: "Ally", wait: true, f: (p) => showAllyMenu(p) }, { t: "Go Start", wait: true, f: (p) => movePlayer(p, -p.pos) },
+        { t: "+1 Roll", f: (p) => { p.extraTurn = true; log(`⭐ ${p.name} gets an extra turn!`); } }, 
+        { t: "?", class: "s-event" }, { t: "?", class: "s-event" }, { t: "+3 Spaces", wait: true, f: (p) => movePlayer(p, 3) }, 
+        { t: "Jaap STOP", class: "s-jaap" }, { t: "Next Free", wait: true, class: "s-cyan", f: (p) => jumpTo(p, "Free space") }, 
+        { t: "?", class: "s-event" }, { t: "Next Jaap (+2🌰)", wait: true, f: (p) => { addAcorns(p, 2); jumpTo(p, "Jaap STOP"); } }, 
+        { t: "Ally", wait: true, f: (p) => showAllyMenu(p) }, { t: "?", class: "s-event" }, { t: "Jaap STOP", class: "s-jaap" }, 
+        { t: "?", class: "s-event" }, { t: "+1 🌰", f: (p) => addAcorns(p, 1) }, { t: "?", class: "s-event" }, { t: "?", class: "s-event" }, 
+        { t: "Next Ally", wait: true, f: (p) => jumpTo(p, "Ally") }, { t: "Jaap STOP", class: "s-jaap" }, { t: "?", class: "s-event" }, 
+        { t: "Ally", wait: true, f: (p) => showAllyMenu(p) }, { t: "Free space" }, { t: "Bridge" }, { t: "Free space" },
+        { t: "-4 Spaces", wait: true, f: (p) => movePlayer(p, -4) }, { t: "-2 🌰", f: (p) => { loseAcorns(p, 2); AudioEngine.sfxHurt(); } }, 
+        { t: "Jaap STOP", class: "s-jaap" }, { t: "Trade", wait: true, f: (p) => showTradeMenu(p) }, { t: "Trade", wait: true, f: (p) => showTradeMenu(p) },
+        { t: "-8 Spaces (+2🌰)", wait: true, f: (p) => { addAcorns(p, 2); movePlayer(p, -8); } }, { t: "?", class: "s-event" },
+        { t: "+1 🌰", f: (p) => addAcorns(p, 1) }, { t: "End", class: "s-end" }
+    ];
+
+    const AlliesList = [
+        { name: "Mammoth", p: "Skip Jaaps" }, { name: "Caveman", p: "+1 to Rolls" }, 
+        { name: "Squirrel", p: "Start = +4 🌰" }, { name: "Llama", p: "Lap = +2 🌰" }, 
+        { name: "White Dog", p: "Bridge = +1 🌰" }, { name: "Leopard", p: "Free = +1 🌰" },
+        { name: "Saber-tooth", p: "Corner = +1 🌰" }, { name: "Yak", p: "Pass = +1 🌰" }, 
+        { name: "White Wolf", p: "Defend Duels" }
+    ];
+
+    /* PUBLIC EVENT DECK (Thematic, no specific names) */
+    const Events = [
+        { t: "Glacier Collapse!", desc: "Everyone loses 1 🌰.", f: (p) => { state.players.forEach(o=>{if(!o.dead) loseAcorns(o,1);}); AudioEngine.sfxHurt(); } },
+        { t: "Golden Find!", desc: "Collect 2 Golden Acorns.", f: (p) => addAcorns(p, 2) }, 
+        { t: "Ancient Tree!", desc: "Collect 5 Golden Acorns.", f: (p) => addAcorns(p, 5) }, 
+        { t: "Villager's Gift", desc: "Gain a free Ally!", wait: true, f: (p) => showAllyMenu(p) },
+        { t: "Thief in the Night", desc: "Steal 1 🌰 from a player.", wait: true, f: (p) => showTargetMenu(p, 1) }, 
+        { t: "Ice Slide", desc: "Advance directly to a Free Space.", wait: true, f: (p) => jumpTo(p, "Free space") }, 
+        { t: "Lucky Find", desc: "Move 3 spaces & collect 1 🌰.", wait: true, f: (p) => { addAcorns(p, 1); movePlayer(p, 3); } },
+        { t: "Lost in the Tundra", desc: "Go back to Start.", wait: true, f: (p) => movePlayer(p, -p.pos) },
+        { t: "Wandering Trader", desc: "Swap allies with another player.", wait: true, f: (p) => showSwapMenu(p) },
+        { t: "Avalanche!", desc: "Move back 3 spaces.", wait: true, f: (p) => { AudioEngine.sfxHurt(); movePlayer(p, -3); } },
+        { t: "Spring Thaw", desc: "Collect 1 🌰 for every lap completed.", f: (p) => addAcorns(p, p.laps) },
+        { t: "Secret Stash", desc: "Roll dice to collect acorns.", wait: true, f: (p) => { let r = Math.floor(Math.random()*6)+1; addAcorns(p, r); log(`Rolled ${r} for stash!`); nextTurn(); } },
+        { t: "Shortcut!", desc: "Move straight to the Bridge.", wait: true, f: (p) => jumpTo(p, "Bridge") }
+    ];
+
+    /* =========================================================================
+       MODULE 4: STATE MANAGEMENT & SETUP
+       ========================================================================= */
+    let state = { players: [], turn: 0, finishers: [], firstLapFinished: false };
+    const colors = ['#F44336', '#4CAF50', '#2196F3', '#FFEB3B'];
+
+    document.getElementById('player-count').addEventListener('change', (e) => {
+        const c = document.getElementById('player-inputs'); c.innerHTML = '';
+        for(let i=0; i<e.target.value; i++) {
+            c.innerHTML += `<div class="setup-row"><input type="text" id="p${i}-name" value="Player ${i+1}" maxlength="12"><div class="player-color-dot" style="background:${colors[i]};"></div></div>`;
+        }
+    });
+    document.getElementById('player-count').dispatchEvent(new Event('change'));
+
+    document.getElementById('btn-start-game').addEventListener('click', () => {
+        const num = document.getElementById('player-count').value;
+        for(let i=0; i<num; i++) {
+            state.players.push({
+                id: i, name: document.getElementById(`p${i}-name`).value, color: colors[i],
+                pos: 0, acorns: 4, laps: 0, ally: null, skip: false, extraTurn: false, dead: false
+            });
+        }
+        
+        const setupContainer = document.getElementById('setup-container'); setupContainer.style.opacity = '0';
+        setTimeout(() => {
+            setupContainer.style.display = 'none'; 
+            document.getElementById('game-interface').style.display = 'flex'; 
+            AudioEngine.ctx.resume(); buildBoard(); updateHUD(); setTurn();
+        }, 300);
+    });
+
+    document.getElementById('btn-rules').addEventListener('click', () => {
+        createChoiceModal("RULEBOOK", [{t: "Close", a: () => closeModal()}]);
+        document.getElementById('modal-content-area').innerHTML = `
+            <div style="text-align: left; font-size: clamp(0.9rem, 2.5vmin, 1.2rem); line-height: 1.5; color: #FFF;">
+                <p><strong>Start:</strong> Distribute 4 golden acorns.</p>
+                <p><strong>Laps:</strong> 1st gets +1 bonus. Everyone gets +2 per lap.</p>
+                <p style="color: var(--cyan);"><strong>Endgame (3-4 P):</strong> 1st (+3🌰), 2nd (+2🌰), 3rd (+1🌰). Last eliminated.</p>
+                <p style="color: var(--gold);"><strong>Endgame (2 P):</strong> First to finish lap 3 gets +3🌰. Game ends instantly. Winner based on total acorns.</p>
+                <p><strong>Combat:</strong> Land on an enemy to enter Duel Arena. Winner steals 1 acorn.</p>
+            </div>`;
+    });
+
+    /* =========================================================================
+       MODULE 5: GAME ENGINE LOGIC & ACTION QUEUE
+       ========================================================================= */
+    function addAcorns(p, amt) {
+        if(amt <= 0) return; p.acorns += amt;
+        FX.spawn3DAcorn(p.id, 'gain'); updateHUD();
+    }
+    
+    function loseAcorns(p, amt) {
+        let actualLoss = Math.min(p.acorns, amt); if(actualLoss <= 0) return; p.acorns -= actualLoss;
+        FX.spawn3DAcorn(p.id, 'lose'); updateHUD();
+    }
+
+    function buildBoard() {
+        const b = document.getElementById('board'); 
+        document.querySelectorAll('.space').forEach(e => e.remove());
+        SpaceData.forEach((sp, i) => {
+            let div = document.createElement('div'); div.className = `space ${sp.class || ''}`; div.id = `space-${i}`; div.style.gridColumn = gridMap[i].c; div.style.gridRow = gridMap[i].r;
+            div.innerHTML = `<span>${sp.t}</span><div id="tc-${i}" class="token-container"></div>`; b.appendChild(div);
+        });
+        state.players.forEach(p => drawToken(p, false));
+    }
+
+    function drawToken(p, hopping = false) {
+        if(p.dead) return;
+        let old = document.getElementById(`tok-${p.id}`); if(old) old.remove();
+        let tok = document.createElement('div'); tok.id = `tok-${p.id}`; tok.className = 'token';
+        if (hopping) { 
+            AudioEngine.sfxJump(); 
+            tok.style.transition = 'transform 0.15s ease-out'; tok.style.transform = 'translateY(-3vmin) scale(1.2)';
+            setTimeout(() => { tok.style.transform = 'translateY(0) scale(1)'; }, 150);
+        }
+        tok.style.background = p.color; tok.innerText = p.name.charAt(0);
+        document.getElementById(`tc-${p.pos}`).appendChild(tok);
+        
+        let space = document.getElementById(`space-${p.pos}`); space.classList.add('glow');
+        setTimeout(() => space.classList.remove('glow'), 800);
+    }
+
+    function updateHUD() {
+        const h = document.getElementById('hud'); h.innerHTML = '';
+        state.players.forEach((p, i) => {
+            h.innerHTML += `<div id="hud-p${p.id}" class="hud-player ${i === state.turn ? 'active' : ''} ${p.dead ? 'eliminated' : ''}" style="border-top-color:${p.color};">
+                <div class="p-name" style="color:${p.color}">${p.name}</div>
+                <div class="p-acorns">${p.acorns} 🌰</div>
+                <div style="font-size: clamp(0.8rem, 2vmin, 1.2rem); font-weight:bold;">Laps: <span style="color:var(--cyan);">${p.laps}/3</span></div>
+                <div style="color:var(--gold); font-size: clamp(0.7rem, 1.8vmin, 1rem); font-weight:bold; margin-top:0.5vmin;">${p.ally ? p.ally.name : 'NO ALLY'}</div>
+            </div>`;
         });
     }
-    launch(id){
-        if(this.processes[id]) return this.focus(id);
-        const app=this.registry.find(a=>a.id===id);
-        const win=document.createElement("div");win.className="window";win.style.left=200+Object.keys(this.processes).length*40+"px";win.style.top=120+Object.keys(this.processes).length*40+"px";win.style.zIndex=this.z++;
-        win.innerHTML=`<div class="titlebar"><div class="traffic"><div class="dot red" onclick="OS.close('${id}')"></div><div class="dot yellow" onclick="OS.minimize('${id}')"></div><div class="dot green"></div></div><div class="title">${app.name}</div></div><div class="window-body">${this.renderApp(id)}</div>`;
-        this.enableDrag(win,id);
-        document.getElementById("workspace").appendChild(win);
-        this.processes[id]=win;
-        document.getElementById("dot-"+id).classList.add("active");
-        this.focus(id);this.notify("Launched",app.name+" opened");
+
+    function log(msg) {
+        const l = document.getElementById('log'); let t = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+        l.innerHTML = `<div class="log-entry"><span style="color:#666;">[${t}]</span> ${msg}</div>` + l.innerHTML; l.scrollTop = 0;
     }
-    renderApp(id){
-        if(id==="chat"){return `<iframe src="https://deadsimplechat.com/J4fFLy4Ek" style="width:100%;height:100%;border:none;"></iframe>`;}
-        return `<div style="padding:30px;">${id} loading...</div>`;
+
+    function setTurn() {
+        let p = state.players[state.turn]; document.getElementById('turn-indicator').innerText = `${p.name}'s Turn`;
+        document.getElementById('turn-indicator').style.color = p.color; document.getElementById('btn-roll').disabled = false;
+        updateHUD();
     }
-    focus(id){this.processes[id].style.zIndex=this.z++;document.getElementById("active-app").innerText=this.registry.find(a=>a.id===id).name;}
-    close(id){const win=this.processes[id];win.remove();delete this.processes[id];document.getElementById("dot-"+id).classList.remove("active");}
-    minimize(id){const win=this.processes[id];win.style.display="none";setTimeout(()=>win.style.display="flex",200);}
-    enableDrag(win,id){
-        const bar=win.querySelector(".titlebar");
-        bar.onmousedown=(e)=>{
-            this.focus(id);
-            const offX=e.clientX-win.offsetLeft;const offY=e.clientY-win.offsetTop;
-            document.onmousemove=(ev)=>{win.style.left=ev.clientX-offX+"px";win.style.top=ev.clientY-offY+"px";};
-            document.onmouseup=()=>document.onmousemove=null;
-        };
+
+    function nextTurn() {
+        let p = state.players[state.turn];
+        if (p.extraTurn) { p.extraTurn = false; log(`⭐ ${p.name} takes an extra turn!`); }
+        else { do { state.turn = (state.turn + 1) % state.players.length; } while (state.players[state.turn].dead || state.finishers.includes(state.players[state.turn])); }
+        setTurn();
     }
-}
-const OS=new UltraKernel();
-</script>
 
-<script>
-// ===================== VIRTUAL FILE SYSTEM =====================
-class VirtualFS{constructor(){this.dbName="TahoeInfinityFS";this.init();}init(){const request=indexedDB.open(this.dbName,1);request.onupgradeneeded=(e)=>{const db=e.target.result;if(!db.objectStoreNames.contains("files")){db.createObjectStore("files",{keyPath:"path"});}};request.onsuccess=(e)=>{this.db=e.target.result;console.log("Filesystem Ready");};}saveFile(path,content){const tx=this.db.transaction("files","readwrite");tx.objectStore("files").put({path,content});}readFile(path,callback){const tx=this.db.transaction("files","readonly");const req=tx.objectStore("files").get(path);req.onsuccess=()=>callback(req.result?.content || "");}listFiles(callback){const tx=this.db.transaction("files","readonly");const store=tx.objectStore("files");const files=[];store.openCursor().onsuccess=(e)=>{const cursor=e.target.result;if(cursor){files.push(cursor.value.path);cursor.continue();} else {callback(files);}};}deleteFile(path){const tx=this.db.transaction("files","readwrite");tx.objectStore("files").delete(path);}
-}
-OS.fs=new VirtualFS();
-</script>
+    /* =========================================================================
+       MODULE 6: MOVEMENT & THE FIX FOR ACTION SPACES
+       ========================================================================= */
+    document.getElementById('btn-roll').addEventListener('click', () => {
+        let p = state.players[state.turn];
 
-<script>
-// ===================== APPS RENDER =====================
-OS.renderAppOriginal=OS.renderApp;
-OS.renderApp=function(id){
-    if(id==="finder"){return `<div style="display:flex;height:100%;"><div style="width:220px;background:rgba(0,0,0,0.05);padding:15px;"><h3>Favorites</h3><div onclick="OS.loadFiles()">Documents</div><div onclick="OS.createFile()">+ New File</div></div><div style="flex:1;padding:20px;" id="finder-files"></div></div>`;}
-    if(id==="notes"){return `<textarea id="notes-area" style="width:100%;height:100%;padding:20px;font-size:16px;"></textarea>`;}
-    if(id==="calc"){return `<div style="padding:30px;"><input id="calc-display" style="width:100%;font-size:40px;text-align:right;"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;">${["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+"].map(b=>`<button onclick="OS.calcPress('${b}')">${b}</button>`).join("")}</div></div>`;}
-    if(id==="chat"){return `<iframe src="https://deadsimplechat.com/J4fFLy4Ek" style="width:100%;height:100%;border:none;"></iframe>`;}
-    return OS.renderAppOriginal(id);
-};
-// Finder & Notes logic
-OS.loadFiles=function(){OS.fs.listFiles(files=>{const container=document.getElementById("finder-files");container.innerHTML="";files.forEach(f=>{const div=document.createElement("div");div.style.padding="8px";div.style.cursor="pointer";div.innerText=f;div.onclick=()=>OS.openFile(f);container.appendChild(div);});});};
-OS.createFile=function(){const name=prompt("Enter file name");if(!name) return;OS.fs.saveFile(name,"");OS.loadFiles();};
-OS.openFile=function(path){OS.fs.readFile(path,(content)=>{OS.launch("notes");setTimeout(()=>{const area=document.getElementById("notes-area");if(area){area.value=content;area.oninput=()=>{OS.fs.saveFile(path,area.value);}}},300);};};
-// Calculator logic
-OS.calcPress=function(val){const disp=document.getElementById("calc-display");if(val==="="){try{disp.value=eval(disp.value);}catch{disp.value="Error";}}else{disp.value+=val;}};
-</script>
+        if (p.skip) {
+            p.skip = false; log(`🛑 ${p.name} skips a turn.`);
+            AudioEngine.sfxHurt(); return setTimeout(nextTurn, 1000);
+        }
 
-<script>
-// ===================== BOOT, LOGIN & FINAL INIT =====================
-OS.showLogin=function(){
-    const overlay=document.createElement("div");overlay.id="loginScreen";overlay.style.position="fixed";overlay.style.inset="0";overlay.style.background="linear-gradient(120deg,#000428,#004e92)";overlay.style.display="flex";overlay.style.flexDirection="column";overlay.style.alignItems="center";overlay.style.justifyContent="center";overlay.style.zIndex="999999999";overlay.style.color="white";overlay.style.fontFamily="sans-serif";
-    overlay.innerHTML=`<h1 style="margin-bottom:40px;">Tahoe OS</h1><div id="userList"></div>`;
-    document.body.appendChild(overlay);
-    const list=document.getElementById("userList");
-    OS.users.forEach(user=>{const btn=document.createElement("div");btn.style.margin="15px";btn.style.padding="20px 40px";btn.style.background="rgba(255,255,255,0.2)";btn.style.borderRadius="20px";btn.style.cursor="pointer";btn.innerText=user.name;btn.onclick=()=>{
-        if(user.password){const p=prompt("Enter password:");if(p!==user.password) return alert("Wrong password");}
-        overlay.remove();OS.notify("Login Successful","Welcome "+user.name);};list.appendChild(btn);});
-};
-window.addEventListener("load",()=>{OS.boot();setTimeout(OS.showLogin,500);});
-</script>
+        let baseRoll = Math.floor(Math.random() * 6) + 1;
+        let bonus = (p.ally && p.ally.name === "Caveman") ? 1 : 0;
+        let finalRoll = baseRoll + bonus;
+        
+        FX.rollCenter3DDice(finalRoll, () => {
+            log(`🎲 ${p.name} moves ${finalRoll}.`);
+            movePlayer(p, finalRoll);
+        });
+    });
 
+    function movePlayer(p, amt) {
+        let startPos = p.pos; let steps = Math.abs(amt); let dir = amt > 0 ? 1 : -1;
+        let currentStep = 0;
+
+        function step() {
+            if (currentStep >= steps) { 
+                if(p.ally && p.ally.name === "Yak" && amt > 0) {
+                    let passed = 0; state.players.forEach(o => { if(o.id !== p.id && !o.dead && o.pos > startPos && o.pos <= startPos+amt) passed++; });
+                    if(passed > 0) { addAcorns(p, passed); log(`🐂 Yak power: got ${passed} 🌰 passing players!`); }
+                }
+                evaluateSpace(p); return; 
+            }
+            p.pos += dir;
+            
+            if (p.pos >= SpaceData.length) {
+                p.pos = 0; p.laps++; 
+                addAcorns(p, 2); log(`🏁 ${p.name} finished lap ${p.laps}! (+2 🌰)`);
+                
+                if (!state.firstLapFinished) { state.firstLapFinished = true; addAcorns(p, 1); log(`🌟 ${p.name} is FIRST to finish a lap! (+1 🌰)`); AudioEngine.sfxWin(); }
+                
+                if (p.laps >= 3 && !state.finishers.includes(p)) {
+                    state.finishers.push(p); let place = state.finishers.length; let totalP = state.players.length;
+                    
+                    if (totalP === 4) {
+                        if (place === 1) { addAcorns(p, 3); log(`🥇 ${p.name} finished 1st! (+3 🌰)`); FX.shootConfetti(); }
+                        if (place === 2) { addAcorns(p, 2); log(`🥈 ${p.name} finished 2nd! (+2 🌰)`); }
+                        if (place === 3) { addAcorns(p, 1); log(`🥉 ${p.name} finished 3rd! (+1 🌰)`); }
+                        if (place === 4) { p.dead = true; log(`💀 ${p.name} finished LAST and is ELIMINATED!`); AudioEngine.sfxHurt(); return endGame(); }
+                    } 
+                    else if (totalP === 3) {
+                        if (place === 1) { addAcorns(p, 2); log(`🥇 ${p.name} finished 1st! (+2 🌰)`); FX.shootConfetti(); }
+                        if (place === 2) { addAcorns(p, 1); log(`🥈 ${p.name} finished 2nd! (+1 🌰)`); }
+                        if (place === 3) { p.dead = true; log(`💀 ${p.name} finished LAST and is ELIMINATED!`); AudioEngine.sfxHurt(); return endGame(); }
+                    } 
+                    else if (totalP === 2) {
+                        if (place === 1) { addAcorns(p, 3); log(`🥇 ${p.name} finished Lap 3 first! GAME OVER!`); FX.shootConfetti(); setTimeout(endGame, 1000); return; }
+                    }
+                }
+            } else if (p.pos < 0) { p.pos = SpaceData.length - 1; }
+
+            drawToken(p, true); currentStep++; setTimeout(step, 300); // Faster stepping
+        }
+        step();
+    }
+
+    function jumpTo(p, spaceName) {
+        for(let i=1; i<SpaceData.length; i++) {
+            if(SpaceData[(p.pos + i) % SpaceData.length].t.toLowerCase().includes(spaceName.toLowerCase())) return movePlayer(p, i);
+        }
+    }
+
+    function evaluateSpace(p) {
+        updateHUD(); let sp = SpaceData[p.pos]; log(`${p.name} landed on: ${sp.t}`);
+
+        if (p.pos === 0 && p.ally && p.ally.name === "Squirrel") { addAcorns(p, 4); log("Squirrel power: +4 🌰"); }
+        if (sp.t.toLowerCase().includes("bridge") && p.ally && p.ally.name === "White Dog") { addAcorns(p, 1); log("White Dog power: +1 🌰"); }
+        if (sp.t.toLowerCase().includes("free space") && p.ally && p.ally.name === "Leopard") { addAcorns(p, 1); log("Leopard power: +1 🌰"); }
+        if (cornerSpaces.includes(p.pos) && p.ally && p.ally.name === "Saber-tooth") { addAcorns(p, 1); log("Saber-tooth power: +1 🌰"); }
+
+        let enemy = state.players.find(o => o.id !== p.id && !o.dead && !state.finishers.includes(o) && o.pos === p.pos);
+        if (enemy) {
+            if(enemy.ally && enemy.ally.name === "White Wolf") {
+                log(`🐺 White Wolf defends! ${enemy.name} steals 1 🌰 from ${p.name}!`);
+                loseAcorns(p, 1); addAcorns(enemy, 1); AudioEngine.sfxHurt(); triggerSpaceLogic(p, sp);
+            } else {
+                log(`⚔️ DUEL INITIATED!`);
+                openModal("⚔️ COMBAT INITIATED ⚔️", ""); AudioEngine.sfxHurt();
+                let content = document.getElementById('modal-content-area');
+                content.innerHTML = `
+                    <div class="duel-arena">
+                        <div class="duel-player" id="dp1"><div class="duel-avatar" style="background:${p.color}">${p.name.charAt(0)}</div><h3 style="color:${p.color};">${p.name}</h3><div id="dd1" style="font-size: 6vmin; width: 10vmin; height: 10vmin; background:#FFF; color:#000; border-radius:1vmin; display:flex; align-items:center; justify-content:center; margin-top:1vmin;">?</div></div>
+                        <div class="vs-text">VS</div>
+                        <div class="duel-player" id="dp2"><div class="duel-avatar" style="background:${enemy.color}">${enemy.name.charAt(0)}</div><h3 style="color:${enemy.color};">${enemy.name}</h3><div id="dd2" style="font-size: 6vmin; width: 10vmin; height: 10vmin; background:#FFF; color:#000; border-radius:1vmin; display:flex; align-items:center; justify-content:center; margin-top:1vmin;">?</div></div>
+                    </div>`;
+                document.getElementById('modal-btns').innerHTML = `<button class="btn btn-red" id="btn-start-duel">ROLL</button>`;
+                
+                document.getElementById('btn-start-duel').onclick = () => {
+                    document.getElementById('btn-start-duel').classList.add('hidden');
+                    let d1 = document.getElementById('dd1'); let d2 = document.getElementById('dd2');
+                    let r1=0, r2=0, ticks=0;
+                    let interval = setInterval(() => {
+                        r1 = Math.floor(Math.random()*6)+1; r2 = Math.floor(Math.random()*6)+1;
+                        while(r1 === r2) { r1 = Math.floor(Math.random()*6)+1; r2 = Math.floor(Math.random()*6)+1; }
+                        d1.innerText = r1; d2.innerText = r2; AudioEngine.sfxDiceTick(); ticks++;
+                        if(ticks > 15) {
+                            clearInterval(interval); let winner = r1 > r2 ? p : enemy; let loser = r1 > r2 ? enemy : p;
+                            if(r1 > r2) { d1.style.color="var(--gold)"; document.getElementById('dp2').style.opacity="0.5"; } else { d2.style.color="var(--gold)"; document.getElementById('dp1').style.opacity="0.5"; }
+                            AudioEngine.sfxWin();
+                            document.getElementById('modal-btns').innerHTML = `<h2 style="width:100%; color:var(--gold);">${winner.name} WINS!</h2><button class="btn btn-cyan" id="btn-end-duel">Steal Acorn</button>`;
+                            document.getElementById('btn-end-duel').onclick = () => { closeModal(); loseAcorns(loser, 1); addAcorns(winner, 1); log(`⚔️ ${winner.name} stole 1 🌰 from ${loser.name}!`); triggerSpaceLogic(p, sp); };
+                        }
+                    }, 80);
+                };
+                return;
+            }
+        }
+        triggerSpaceLogic(p, sp);
+    }
+
+    // THE FIX: Action Banner Queue System
+    function triggerSpaceLogic(p, sp) {
+        if (sp.class === 's-jaap') {
+            FX.showActionBanner("JAAP STOP", "Vehicle broken. Skip next turn.", var(--red), () => {
+                p.skip = true; AudioEngine.sfxHurt(); nextTurn(); 
+            });
+        }
+        else if (sp.class === 's-event') {
+            let ev = Events[Math.floor(Math.random() * Events.length)];
+            FX.showActionBanner("EVENT DRAWN", ev.t, var(--cyan), () => {
+                createChoiceModal("EVENT DRAWN", [{t: "Resolve", a: () => { 
+                    if (ev.wait) ev.f(p); 
+                    else { ev.f(p); updateHUD(); nextTurn(); } 
+                }}]);
+                document.getElementById('modal-desc').innerHTML = `<span style="color: var(--cyan); font-size: clamp(1.2rem, 3vmin, 2rem);">${ev.desc}</span>`;
+            });
+        }
+        else if (sp.f) { 
+            // Only show banner if there is an actual action
+            if(sp.t !== "START" && sp.t !== "End" && sp.t !== "Free space" && sp.t !== "Bridge") {
+                 FX.showActionBanner("SPACE TRIGGERED", sp.t, var(--gold), () => {
+                     sp.f(p); updateHUD(); 
+                     if (!sp.wait) setTimeout(nextTurn, 500); 
+                 });
+            } else {
+                 sp.f(p); updateHUD(); 
+                 if (!sp.wait) setTimeout(nextTurn, 500);
+            }
+        }
+        else { setTimeout(nextTurn, 800); }
+    }
+
+    /* =========================================================================
+       MODULE 7: UI UTILITIES & MODALS
+       ========================================================================= */
+    function openModal(title, descHtml) {
+        document.getElementById('modal-overlay').classList.add('active'); document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-content-area').innerHTML = `<div id="modal-desc">${descHtml}</div>`; document.getElementById('modal-btns').innerHTML = '';
+    }
+    function closeModal() { document.getElementById('modal-overlay').classList.remove('active'); }
+    function createChoiceModal(title, btns) {
+        openModal(title, ""); let c = document.getElementById('modal-btns'); c.innerHTML = '';
+        btns.forEach(b => { let btn = document.createElement('button'); btn.className = 'btn'; btn.innerText = b.t; btn.onclick = () => { closeModal(); b.a(); }; c.appendChild(btn); });
+    }
+
+    function endGame() {
+        AudioEngine.sfxWin(); let rank = [...state.players].sort((a,b) => b.acorns - a.acorns); let winner = rank[0];
+        openModal("🏆 GAME OVER 🏆", ""); FX.shootConfetti();
+        
+        let html = rank.map((p,i) => `
+            <div style="background: rgba(0,0,0,0.8); padding: 2vmin; border-radius: 1vmin; border: 2px solid ${p.color}; margin-bottom: 2vmin; text-align: left;">
+                <div style="display:flex; justify-content:space-between; font-size: clamp(1.2rem, 3vmin, 2rem); font-weight:bold; color:${p.color};">
+                    <span>${i===0 ? '👑 ' : ''}${i+1}. ${p.name}</span><span>${p.acorns} 🌰</span>
+                </div>
+            </div>`).join('');
+        
+        document.getElementById('modal-content-area').innerHTML = `<h3 style="font-size: clamp(2rem, 5vmin, 3rem); color: var(--gold); margin-bottom: 2vmin; font-family:'Carter One';">${winner.name} WINS!</h3>${html}`;
+        document.getElementById('modal-btns').innerHTML = `<button class="btn btn-cyan" onclick="location.reload()">PLAY AGAIN</button>`;
+        document.getElementById('btn-roll').classList.add('hidden');
+    }
+
+    function showAllyMenu(p) {
+        let avail = AlliesList.filter(a => !state.players.find(pl => pl.ally && pl.ally.name === a.name));
+        if(avail.length === 0) avail = AlliesList;
+        let choices = avail.sort(() => 0.5 - Math.random()).slice(0, 3);
+        let btns = choices.map(c => ({ t: `${c.name}\n(${c.p})`, a: () => { p.ally = c; log(`🤝 Allied with ${c.name}`); updateHUD(); nextTurn(); } }));
+        btns.push({ t: "Pass", a: () => { log("Passed on ally."); nextTurn(); } });
+        createChoiceModal(`Choose Ally`, btns);
+    }
+
+    function showTradeMenu(p) {
+        let btns = [
+            { t: "Buy Ally (4🌰)", a: () => { if(p.acorns>=4){ loseAcorns(p,4); showAllyMenu(p);} else {log("Not enough acorns!"); AudioEngine.sfxHurt(); nextTurn();} } },
+            { t: "Sell Ally (+2🌰)", a: () => { if(p.ally){p.ally=null; addAcorns(p,2); log("Sold ally.");} else {log("No ally to sell!");} updateHUD(); nextTurn(); } },
+            { t: "Leave", a: () => nextTurn() }
+        ];
+        createChoiceModal("Villager Market", btns);
+    }
+
+    function showTargetMenu(p, amt) {
+        let targets = state.players.filter(o => o.id !== p.id && !o.dead);
+        let btns = targets.map(t => ({ t: `${t.name}`, a: () => { let act = Math.min(amt, t.acorns); loseAcorns(t, act); addAcorns(p, act); log(`Stole ${act} 🌰 from ${t.name}`); nextTurn(); } }));
+        if(btns.length === 0) btns.push({t: "Nobody available", a: () => nextTurn()});
+        createChoiceModal(`Steal ${amt} Acorn(s) from:`, btns);
+    }
+
+    function showSwapMenu(p) {
+        let targets = state.players.filter(o => o.id !== p.id && !o.dead && o.ally);
+        if(targets.length === 0) { log("Nobody has an ally to swap!"); return nextTurn(); }
+        let btns = targets.map(t => ({ t: `Swap with ${t.name}`, a: () => { let temp = p.ally; p.ally = t.ally; t.ally = temp; log(`Swapped allies with ${t.name}!`); updateHUD(); nextTurn(); } }));
+        btns.push({ t: "Pass", a: () => nextTurn() });
+        createChoiceModal("Swap Ally", btns);
+    }
+</script>
 </body>
 </html>
