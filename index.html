@@ -8,7 +8,7 @@
     
     <style>
         /* ==========================================================================
-           1. CORE ENGINE & LIQUID RAINBOW (60FPS Optimized)
+           1. CORE ENGINE & LIQUID RAINBOW
            ========================================================================== */
         :root {
             --glass: rgba(15, 20, 30, 0.75);
@@ -18,15 +18,8 @@
             --red: #FF1744;
             --green: #00E676;
         }
-        /* INSTRUCTIONS BUTTONS & PANEL */
-        .btn-info { background: #607D8B; box-shadow: 0 4px 0 #37474F; color: #FFF; font-size: 0.9rem; padding: 10px; margin-top: 5px; }
-        .instr-grid { text-align: left; display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 50vh; overflow-y: auto; padding: 10px; }
-        .instr-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cyan); font-size: 0.95rem; line-height: 1.4; }
-        .instr-item b { color: var(--gold); }
-        #sm-body { max-height: 60vh; overflow-y: auto; }
+        
         html, body {
-
-            
             width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
@@ -49,7 +42,7 @@
         @keyframes rainMove { from { background-position: 0 0; } to { background-position: 0 500px; } }
 
         /* ==========================================================================
-           3. SETUP & PROFANITY UI
+           3. SETUP UI
            ========================================================================== */
         #setup-screen { position: absolute; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); }
         .setup-card { padding: 40px; border-radius: 20px; width: 90%; max-width: 650px; text-align: center; border: 2px solid var(--cyan); }
@@ -62,38 +55,62 @@
         #error-msg { background: var(--red); color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: none; font-weight: bold; font-size: 0.9rem; }
 
         /* ==========================================================================
-           4. GAME LAYOUT & PROCEDURAL BOARD
+           4. GAME LAYOUT & PROCEDURAL BOARD (EXPANDED FOR MASSIVE BOARDS)
            ========================================================================== */
         #game-container { display: none; width: 100%; height: 100%; padding: 1.5vmin; gap: 1.5vmin; }
         #left-col { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
         #right-col { width: 420px; display: flex; flex-direction: column; gap: 1.5vmin; z-index: 10; }
 
         #board-wrapper { position: relative; width: 100%; height: 100%; max-width: 92vh; max-height: 92vw; aspect-ratio: 1/1; }
-        #board { display: grid; width: 100%; height: 100%; border-radius: 15px; position: relative; gap: 3px; padding: 5px; }
+        #board { display: grid; width: 100%; height: 100%; border-radius: 15px; position: relative; gap: 2px; padding: 5px; }
 
+        /* ==========================================================================
+           5. ANIMATED CSS BIOMES (NO IMAGES USED)
+           ========================================================================== */
         #center-island { grid-column: 2 / -2; grid-row: 2 / -2; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; border-radius: 10px; overflow: hidden; z-index: 1; border: 2px solid var(--border); }
-        .biome { background-size: cover; background-position: center; position: relative; }
-        .biome::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.2); }
-        .b-grass { background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600'); }
-        .b-peaks { background-image: url('https://images.unsplash.com/photo-1517823382935-51bfcb0ec6bc?w=600'); }
-        .b-village { background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600'); }
-        .b-tundra { background-image: url('https://images.unsplash.com/photo-1478265409131-1f65c88f965c?w=600'); }
+        .biome { position: relative; overflow: hidden; }
+        
+        /* Grassy Plains: Rolling wind waves */
+        .b-grass { background: linear-gradient(120deg, #558b2f, #7cb342, #33691e); background-size: 200% 200%; animation: gradientShift 6s ease-in-out infinite; }
+        .b-grass::after { content: ''; position: absolute; inset: -50%; background: repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255,255,255,0.07) 30px, rgba(255,255,255,0.07) 60px); animation: slideWind 3s linear infinite; transform: rotate(-15deg); }
 
-        .space { background: rgba(255, 255, 255, 0.95); border: 1px solid #000; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 0.65rem; font-weight: 900; position: relative; border-radius: 5px; z-index: 10; transition: transform 0.2s; text-transform: uppercase; }
-        .s-start { background: var(--gold) !important; color: #000; font-size: 0.8rem; }
-        .s-event { color: var(--red); font-size: 0.9rem; }
+        /* Mountain Peaks: Parallax jagged rocks */
+        .b-peaks { background: linear-gradient(180deg, #37474f, #1c313a); }
+        .b-peaks::before, .b-peaks::after { content: ''; position: absolute; bottom: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+        .b-peaks::before { background: #546e7a; width: 120%; height: 70%; left: -10%; animation: panMountain 12s linear infinite alternate; }
+        .b-peaks::after { background: #78909c; width: 80%; height: 50%; left: 30%; animation: panMountain 8s linear infinite alternate-reverse; }
+
+        /* Village Outpost: Glowing pulsating campfire light */
+        .b-village { background: radial-gradient(circle at 50% 60%, #e65100 0%, #5d4037 50%, #212121 100%); background-size: 150% 150%; animation: firePulse 1.5s infinite alternate; }
+        .b-village::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 60%); animation: flicker 0.5s infinite alternate; }
+
+        /* Frozen Tundra: CSS Snowstorm */
+        .b-tundra { background: linear-gradient(to bottom, #b2ebf2, #0097a7); }
+        .b-tundra::before { content: ''; position: absolute; top: -100%; left: -50%; width: 200%; height: 200%; background-image: radial-gradient(circle, #FFF 3px, transparent 4px); background-size: 40px 40px; animation: blizzard 2.5s linear infinite; transform: rotate(15deg); }
+
+        @keyframes slideWind { from { transform: translateX(0) rotate(-15deg); } to { transform: translateX(60px) rotate(-15deg); } }
+        @keyframes panMountain { 0% { transform: translateX(-5%); } 100% { transform: translateX(5%); } }
+        @keyframes firePulse { 0% { background-position: 50% 50%; } 100% { background-position: 50% 40%; } }
+        @keyframes flicker { 0% { opacity: 0.7; } 100% { opacity: 1; } }
+        @keyframes blizzard { from { transform: translateY(0) rotate(15deg); } to { transform: translateY(80px) rotate(15deg); } }
+
+        /* ==========================================================================
+           6. SPACES & TOKENS (Responsive to grid size)
+           ========================================================================== */
+        .space { background: rgba(255, 255, 255, 0.95); border: 1px solid #000; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: clamp(0.4rem, 1.2vmin, 0.7rem); font-weight: 900; position: relative; border-radius: 4px; z-index: 10; transition: transform 0.2s; text-transform: uppercase; padding: 2px; }
+        .s-start { background: var(--gold) !important; color: #000; font-size: clamp(0.5rem, 1.5vmin, 0.9rem); }
+        .s-event { color: var(--red); }
         .s-jaap { background: var(--red) !important; color: #FFF; border-radius: 50%; }
         .s-market { background: #D500F9 !important; color: #FFF; }
         .s-cave { background: var(--cyan) !important; color: #000; }
         .s-jackpot { background: var(--green) !important; color: #000; }
-        .s-team { background: #FF9800 !important; color: #FFF; border: 2px solid #FFF; }
         .s-secret { background: #607D8B !important; color: #FFF; }
 
         .token-container { position: absolute; bottom: 2px; display: flex; flex-wrap: wrap; justify-content: center; width: 100%; z-index: 50; pointer-events: none; }
-        .token { width: clamp(22px, 4vmin, 35px); height: clamp(22px, 4vmin, 35px); border-radius: 50%; border: 3px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .token { width: clamp(14px, 2.5vmin, 26px); height: clamp(14px, 2.5vmin, 26px); border-radius: 50%; border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 1.5vmin, 16px); transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         /* ==========================================================================
-           5. UI PANELS
+           7. UI PANELS & HUD
            ========================================================================== */
         #hud { display: flex; flex-direction: column; gap: 10px; height: 45%; overflow-y: auto; padding-right: 5px; }
         .player-card { padding: 12px; border-radius: 12px; border-left: 6px solid; transition: 0.3s; background: rgba(0,0,0,0.3); }
@@ -108,16 +125,21 @@
         .btn { background: var(--gold); border: none; padding: 15px; font-size: 1.5rem; font-weight: 900; border-radius: 12px; cursor: pointer; width: 100%; color: #000; transition: 0.2s; box-shadow: 0 4px 0 #b38600; }
         .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b38600; }
         .btn:disabled { background: #555; box-shadow: none; transform: none; color: #888; cursor: not-allowed; }
-        .btn-cyan { background: var(--cyan); box-shadow: 0 4px 0 #00acc1; }
+        .btn-cyan { background: var(--cyan); box-shadow: 0 4px 0 #00acc1; color: #000; }
+        .btn-info { background: #607D8B; box-shadow: 0 4px 0 #37474F; color: #FFF; font-size: 0.9rem; padding: 10px; margin-top: 5px; }
 
         /* ==========================================================================
-           6. MODALS & DICE
+           8. MODALS & DICE
            ========================================================================== */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 5000; }
         .modal-content { width: 90%; max-width: 550px; padding: 30px; border-radius: 20px; text-align: center; border: 2px solid var(--cyan); }
         .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
         .market-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--border); transition: 0.2s; }
         .market-item:hover { border-color: var(--gold); background: rgba(255,255,255,0.1); }
+        
+        .instr-grid { text-align: left; display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 50vh; overflow-y: auto; padding: 10px; }
+        .instr-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cyan); font-size: 0.95rem; line-height: 1.4; }
+        .instr-item b { color: var(--gold); }
 
         #dice-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 4000; }
         .dice-box { width: 120px; height: 120px; background: #FFF; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 70px; color: #000; animation: shake 0.4s infinite; border: 5px solid #000; }
@@ -140,9 +162,10 @@
             <div class="setup-row">
                 <span>BOARD CONFIGURATION:</span>
                 <select id="board-size">
-                    <option value="20">Sprinting (20 Spaces)</option>
-                    <option value="36" selected>Classic (36 Spaces)</option>
-                    <option value="60">Marathon (60 Spaces)</option>
+                    <option value="36">Classic (36 Spaces)</option>
+                    <option value="60" selected>Marathon (60 Spaces)</option>
+                    <option value="84">Epic Journey (84 Spaces)</option>
+                    <option value="100">Endless Winter (100 Spaces)</option>
                 </select>
             </div>
 
@@ -208,7 +231,7 @@
 
 <script>
     /* =========================================================================
-       1. MILITARY-GRADE ENGINE CONFIG
+       1. ENGINE CONFIGURATION
        ========================================================================= */
     const colors = ['#F44336', '#4CAF50', '#2196F3', '#FFEB3B'];
     const emojis = ['🦖', '🦣', '🐧', '🐺', '🧊', '🏔️', '🏹', '🐻‍❄️'];
@@ -220,8 +243,8 @@
         turn: 0,
         totalTurns: 1,
         jackpot: 0,
-        boardSize: 36,
-        gridSide: 10,
+        boardSize: 60,
+        gridSide: 16,
         spaceActions: [],
         isAnimating: false
     };
@@ -268,7 +291,7 @@
             if (!n || !isClean(n)) { err.innerText = "NAME REJECTED: Profanity or empty."; err.style.display = "block"; return; }
             state.players.push({
                 id: i, name: n, color: colors[i], emoji: document.getElementById(`p${i}-emoji`).value,
-                pos: 0, acorns: 4, laps: 0, skip: false, ally: null, upgrades: [], team: null
+                pos: 0, acorns: 4, laps: 0, skip: false, ally: null, upgrades: []
             });
         }
         document.getElementById('setup-screen').style.display = 'none';
@@ -291,7 +314,7 @@
         r=state.gridSide; for(c=state.gridSide-1; c>=1; c--) perimeter.push({c,r});
         c=1; for(r=state.gridSide-1; r>=2; r--) perimeter.push({c,r});
 
-        const types = ["+1 🌰", "+2 🌰", "EVENT", "EVENT", "Market", "Ice Cave", "Jaap STOP", "JACKPOT", "Bear Trap", "TEAM PACT", "Secret Path", "Toll Bridge"];
+        const types = ["+1 🌰", "+2 🌰", "EVENT", "EVENT", "Market", "Ice Cave", "Jaap STOP", "JACKPOT", "Bear Trap", "EVENT", "Secret Path", "Toll Bridge"];
         
         perimeter.forEach((pos, i) => {
             let type = (i === 0) ? "START" : types[Math.floor(Math.random() * types.length)];
@@ -309,7 +332,7 @@
     }
 
     /* =========================================================================
-       4. MOVEMENT & COLLISION ENGINE (THE FIX)
+       4. MOVEMENT & COLLISION ENGINE
        ========================================================================= */
     function drawToken(p) {
         let old = document.getElementById(`tok-${p.id}`); if (old) old.remove();
@@ -355,11 +378,10 @@
         
         setTimeout(() => {
             moveStep(p, amtRemaining > 0 ? amtRemaining - 1 : amtRemaining + 1, evaluateAtEnd);
-        }, 200);
+        }, 150); // Slightly faster movement for larger boards
     }
 
     function handleLanding(p) {
-        // Duel Check
         let enemy = state.players.find(o => o.id !== p.id && o.pos === p.pos);
         if (enemy) {
             triggerDuel(p, enemy, () => evaluateSpace(p));
@@ -369,7 +391,7 @@
     }
 
     /* =========================================================================
-       5. SPACE EVALUATION (NO-FREEZE LOGIC)
+       5. SPACE EVALUATION
        ========================================================================= */
     function evaluateSpace(p) {
         let type = state.spaceActions[p.pos];
@@ -381,23 +403,18 @@
             case "Market": openMarket(p); break;
             case "JACKPOT": claimJackpot(p); break;
             case "Jaap STOP": case "Bear Trap": 
-                p.skip = true; 
-                if (type === "Bear Trap") loseAcorns(p, 1, true);
-                showMsg(type, "You are frozen for 1 turn!", passTurn);
+                if (p.upgrades.includes("Mammoth") && type === "Jaap STOP") {
+                    log(`<b>${p.name}</b> used Mammoth to skip the Jaap Stop!`);
+                    passTurn();
+                } else {
+                    p.skip = true; 
+                    if (type === "Bear Trap") loseAcorns(p, 1, true);
+                    showMsg(type, "You are frozen for 1 turn!", passTurn);
+                }
                 break;
             case "Ice Cave": 
                 let target = Math.floor(Math.random() * state.boardSize);
                 showMsg("ICE CAVE", "Warping to a random location!", () => teleportToken(p, target));
-                break;
-            case "TEAM PACT":
-                if (p.team) passTurn();
-                else {
-                    let partner = state.players.filter(o => o.id !== p.id && !o.team).sort((a,b) => a.acorns - b.acorns)[0];
-                    if (partner) {
-                        p.team = "A"; partner.team = "A";
-                        showMsg("TEAM PACT", `Linked with ${partner.name}! Share the victory!`, passTurn);
-                    } else passTurn();
-                }
                 break;
             case "Secret Path":
                 if (p.acorns >= 4) {
@@ -420,7 +437,7 @@
     }
 
     /* =========================================================================
-       6. CORE GAME UTILITIES
+       6. GAME UTILITIES
        ========================================================================= */
     function teleportToken(p, target) {
         let tok = document.getElementById(`tok-${p.id}`);
@@ -450,10 +467,10 @@
         document.getElementById('market-wallet').innerText = `WALLET: ${p.acorns} 🌰`;
         let grid = document.getElementById('market-items');
         grid.innerHTML = `
-            <div class="market-item"><h4>MAMMOTH</h4><p>Immune to Jaap Stops</p><b>3 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Mammoth', 3)">BUY</button></div>
+            <div class="market-item"><h4>MAMMOTH</h4><p>Skip all Jaap Stops</p><b>3 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Mammoth', 3)">BUY</button></div>
             <div class="market-item"><h4>TURBO ENGINE</h4><p>+2 to every Roll</p><b>5 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Turbo Engine', 5)">BUY</button></div>
             <div class="market-item"><h4>SNOW TIRES</h4><p>Immune to backwards slides</p><b>4 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Snow Tires', 4)">BUY</button></div>
-            <div class="market-item"><h4>CAVEMAN</h4><p>+1 to every Roll</p><b>3 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Caveman', 3)">BUY</button></div>
+            <div class="market-item"><h4>CAVEMAN</h4><p>Add plus one to each roll</p><b>3 🌰</b><br><button class="btn btn-cyan" onclick="buyItem('Caveman', 3)">BUY</button></div>
         `;
         document.getElementById('market-modal').style.display = 'flex';
     }
@@ -572,10 +589,6 @@
 
     function triggerWin(p) {
         let msg = `${p.name} WON THE GAME!`;
-        if (p.team) {
-            let partner = state.players.find(o => o.id !== p.id && o.team === p.team);
-            msg = `TEAM VICTORY! ${p.name} and ${partner.name} WIN!`;
-        }
         showMsg("🏆 CHAMPION!", msg, () => location.reload());
     }
 
@@ -610,23 +623,22 @@
         });
     }
 
-
     function showInstructions() {
         const body = `
             <div class="instr-grid">
-                <div class="instr-item"><b>Objective:</b> Be the first explorer to complete 3 laps around the board!</div>
-                <div class="instr-item"><b>Laps:</b> Passing Start earns 2 acorns. <b>Beware:</b> Being pushed back past Start will lose you a lap.</div>
-                <div class="instr-item"><b>Village Outpost:</b> Buy upgrades here. <b>Turbo</b> (+2 rolls), <b>Snow Tires</b> (no sliding back), and <b>Allies</b>.</div>
-                <div class="instr-item"><b>Team Pact:</b> Forms an alliance with the player in last place. If either of you finishes, you both win!</div>
-                <div class="instr-item"><b>Traps:</b> Bear Traps and Jaap Stops freeze you for 1 turn. Toll Bridges require 1 acorn to cross.</div>
-                <div class="instr-item"><b>Duels:</b> Land on another player to initiate a duel. The winner steals an acorn!</div>
+                <div class="instr-item"><b>Objective:</b> Collect Golden Acorns! The first player to complete 3 full laps around the board wins the game.</div>
+                <div class="instr-item"><b>How to Start & Play:</b> Everyone starts with 4 golden acorns. Roll the dice to determine how far you move around the board.</div>
+                <div class="instr-item"><b>Laps:</b> Passing Start earns you 2 golden acorns. <b>Beware:</b> Being pushed back past Start will lose you a lap.</div>
+                <div class="instr-item"><b>Event Spaces:</b> If you land on an EVENT space, you draw a card (trigger a random effect) right away.</div>
+                <div class="instr-item"><b>Village Outpost:</b> Buy upgrades here using golden acorns. You can buy <b>Turbo</b> (+2 rolls), <b>Snow Tires</b> (no sliding back), <b>Mammoth</b> (Skip all Jaap stops), or <b>Caveman</b> (Add plus one to each dice roll).</div>
+                <div class="instr-item"><b>Traps & Obstacles:</b> Bear Traps and Jaap Stops freeze you for 1 turn. Toll Bridges require 1 golden acorn to cross.</div>
+                <div class="instr-item"><b>Duels:</b> If another player lands on the same space as you, you duel! The winner steals 1 golden acorn from the loser.</div>
             </div>`;
         
-        // Using your existing showMsg structure but targeting a new body div
         const m = document.getElementById('simple-modal');
         m.style.display = 'flex';
         document.getElementById('sm-title').innerText = "ICE AGE SURVIVAL GUIDE";
-        document.getElementById('sm-text').innerHTML = body; // Changed to innerHTML to render the grid
+        document.getElementById('sm-text').innerHTML = body; 
         document.getElementById('modal-btn-container').innerHTML = `<button class="btn btn-cyan" onclick="closeMsg()">BACK TO GAME</button>`;
         window.closeMsg = () => { m.style.display = 'none'; };
     }
@@ -634,5 +646,3 @@
 </script>
 </body>
 </html>
-
-
